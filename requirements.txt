@@ -1,1 +1,10 @@
-yum install python-zmq
+Ubuntu:
+
+apt install python3-zmq
+cd simpleRaft/tests
+python3 raft.py
+
+CentOS:
+
+yum install python3-zmq
+Rest: same as above

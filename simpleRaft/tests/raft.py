@@ -17,7 +17,8 @@ N = 5
 
 class TestRaft( unittest.TestCase ):
 
-    def setUp( self ):
+    @classmethod
+    def setUpClass( self ):
         self.servers = []
         for i in range(N):
             if i == 0:
@@ -33,7 +34,8 @@ class TestRaft( unittest.TestCase ):
             neighbors = [ n for n in self.servers if n != me ]
             me.set_neighbors(neighbors)
 
-    def tearDown( self ):
+    @classmethod
+    def tearDownClass( self ):
         pass
 
     def _perform_hearbeat( self ):
