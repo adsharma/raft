@@ -9,8 +9,8 @@ class Leader(State):
         self._nextIndexes = defaultdict(int)
         self._matchIndex = defaultdict(int)
 
-    def set_sever(self, server):
-        self._sever = server
+    def set_server(self, server):
+        self._server = server
         self._send_heart_beat()
 
         for n in self._server._neighbors:

@@ -1,6 +1,5 @@
 import redis
-from .board import Board
-
+from board import Board
 
 class RedisBoard(Board):
     """This will create a message board that is backed by Redis."""
