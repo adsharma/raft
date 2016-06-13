@@ -23,6 +23,9 @@ class Server(object):
         self._state.set_server(self)
         self._messageBoard.set_owner(self)
 
+    def set_neighbors(self, neighbors):
+        self._neighbors = neighbors
+
     def send_message(self, message):
         for n in self._neighbors:
             message._receiver = n._name
@@ -63,12 +66,16 @@ class ZeroMQServer(Server):
                 context = zmq.Context()
                 socket = context.socket(zmq.PUB)
                 socket.bind("tcp://*:%d" % self._port)
+                thread.socket = socket
 
                 while True:
                     message = self._messageBoard.get_message()
                     if not message:
                         continue # sleep wait?
                     socket.send(message)
+
+            def __del__(self):
+                self.socket.close()
 
         self.subscribeThread = SubscribeThread()
         self.publishThread = PublishThread()
@@ -77,3 +84,6 @@ class ZeroMQServer(Server):
         self.subscribeThread.start()
         self.publishThread.daemon = True
         self.publishThread.start()
+
+    def __del__(self):
+        self.publishThread.socket.close()
