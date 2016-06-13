@@ -1,10 +1,13 @@
 import unittest
+import sys
 
-from ..boards.memory_board import MemoryBoard
-from ..messages.append_entries import AppendEntriesMessage
-from ..messages.request_vote import RequestVoteMessage
-from ..servers.server import Server
-from ..states.follower import Follower
+sys.path.append('..')
+
+from boards.memory_board import MemoryBoard
+from messages.append_entries import AppendEntriesMessage
+from messages.request_vote import RequestVoteMessage
+from servers.server import Server
+from states.follower import Follower
 
 class TestFollowerServer( unittest.TestCase ):
 
@@ -99,4 +102,5 @@ class TestFollowerServer( unittest.TestCase ):
 
 		self.assertEquals( 0, self.server._state._last_vote )
 
-
+if __name__ == '__main__':
+    unittest.main()

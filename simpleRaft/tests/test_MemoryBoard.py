@@ -1,7 +1,10 @@
 import unittest
+import sys
 
-from ..boards.memory_board import MemoryBoard
-from ..messages.base import BaseMessage
+sys.path.append('..')
+
+from boards.memory_board import MemoryBoard
+from messages.base import BaseMessage
 
 class TestMemoryBoard( unittest.TestCase ):
 
@@ -25,3 +28,5 @@ class TestMemoryBoard( unittest.TestCase ):
 
 		self.assertEquals( msg2, self.board.get_message() )
 
+if __name__ == '__main__':
+    unittest.main()

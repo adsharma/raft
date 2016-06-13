@@ -1,12 +1,15 @@
 import unittest
+import sys
 
-from ..boards.memory_board import MemoryBoard
-from ..messages.append_entries import AppendEntriesMessage
-from ..messages.request_vote import RequestVoteMessage
-from ..servers.server import Server
-from ..states.follower import Follower
-from ..states.candidate import Candidate
-from ..states.leader import Leader
+sys.path.append('..')
+
+from boards.memory_board import MemoryBoard
+from messages.append_entries import AppendEntriesMessage
+from messages.request_vote import RequestVoteMessage
+from servers.server import Server
+from states.follower import Follower
+from states.candidate import Candidate
+from states.leader import Leader
 
 class TestCandidateServer( unittest.TestCase ):
 
@@ -138,3 +141,5 @@ class TestCandidateServer( unittest.TestCase ):
 	def test_multiple_candidates_fail_to_win_so_resend_requests( self ):
 		pass
 
+if __name__ == '__main__':
+    unittest.main()

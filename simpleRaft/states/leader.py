@@ -1,6 +1,6 @@
 from collections import defaultdict
-from .state import State
-from ..messages.append_entries import AppendEntriesMessage
+from state import State
+from messages.append_entries import AppendEntriesMessage
 
 
 class Leader(State):

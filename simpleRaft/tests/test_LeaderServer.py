@@ -1,12 +1,15 @@
 import unittest
+import sys
 
-from ..boards.memory_board import MemoryBoard
-from ..messages.append_entries import AppendEntriesMessage
-from ..messages.request_vote import RequestVoteMessage
-from ..servers.server import Server
-from ..states.follower import Follower
-from ..states.candidate import Candidate
-from ..states.leader import Leader
+sys.path.append('..')
+
+from boards.memory_board import MemoryBoard
+from messages.append_entries import AppendEntriesMessage
+from messages.request_vote import RequestVoteMessage
+from servers.server import Server
+from states.follower import Follower
+from states.candidate import Candidate
+from states.leader import Leader
 
 class TestLeaderServer( unittest.TestCase ):
 
@@ -80,5 +83,6 @@ class TestLeaderServer( unittest.TestCase ):
 
 		for i in self.leader._neighbors:
 			self.assertEquals( [{ "term": 1, "value": 100 } ], i._log )
-			
 
+if __name__ == '__main__':
+    unittest.main()

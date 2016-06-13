@@ -1,4 +1,4 @@
-from .voter import Voter
+from voter import Voter
 
 
 class Follower(Voter):

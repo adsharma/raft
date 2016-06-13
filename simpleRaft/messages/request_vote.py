@@ -1,4 +1,4 @@
-from .base import BaseMessage
+from base import BaseMessage
 
 
 class RequestVoteMessage(BaseMessage):

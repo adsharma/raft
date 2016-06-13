@@ -1,6 +1,6 @@
-from .state import State
+from state import State
 
-from ..messages.request_vote import RequestVoteResponseMessage
+from messages.request_vote import RequestVoteResponseMessage
 
 
 class Voter(State):

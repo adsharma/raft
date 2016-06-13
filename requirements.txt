@@ -1,3 +1,1 @@
-nose==1.3.0
-pyzmq==14.3.1
-wsgiref==0.1.2
+yum install python-zmq
