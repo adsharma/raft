@@ -1,5 +1,5 @@
 import redis
-from board import Board
+from .board import Board
 
 
 class RedisBoard(Board):
