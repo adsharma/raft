@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import unittest
 import sys
 
@@ -27,19 +29,19 @@ class TestCandidateServer(unittest.TestCase):
 
     def test_candidate_server_had_intiated_the_election(self):
 
-        self.assertEquals(1, len(self.oserver._messageBoard._board))
+        self.assertEqual(1, len(self.oserver._messageBoard._board))
 
         self.oserver.on_message(self.oserver._messageBoard.get_message())
 
-        self.assertEquals(1, len(self.server._messageBoard._board))
-        self.assertEquals(
+        self.assertEqual(1, len(self.server._messageBoard._board))
+        self.assertEqual(
             True, self.server._messageBoard.get_message().data["response"])
 
     def test_candidate_server_had_gotten_the_vote(self):
         self.oserver.on_message(self.oserver._messageBoard.get_message())
 
-        self.assertEquals(1, len(self.server._messageBoard._board))
-        self.assertEquals(
+        self.assertEqual(1, len(self.server._messageBoard._board))
+        self.assertEqual(
             True, self.server._messageBoard.get_message().data["response"])
 
     def test_candidate_server_wins_election(self):
@@ -66,7 +68,7 @@ class TestCandidateServer(unittest.TestCase):
         server.on_message(server._messageBoard.get_message())
         server.on_message(server._messageBoard.get_message())
 
-        self.assertEquals(type(server._state), Leader)
+        self.assertEqual(type(server._state), Leader)
 
     def test_two_candidates_tie(self):
         followers = []
@@ -99,8 +101,8 @@ class TestCandidateServer(unittest.TestCase):
             c0.on_message(c0._messageBoard.get_message())
             c1.on_message(c1._messageBoard.get_message())
 
-        self.assertEquals(type(c0._state), Candidate)
-        self.assertEquals(type(c1._state), Candidate)
+        self.assertEqual(type(c0._state), Candidate)
+        self.assertEqual(type(c1._state), Candidate)
 
     def test_two_candidates_one_wins(self):
         followers = []
@@ -135,8 +137,8 @@ class TestCandidateServer(unittest.TestCase):
         for i in range(4):
             c1.on_message(c1._messageBoard.get_message())
 
-        self.assertEquals(type(c0._state), Candidate)
-        self.assertEquals(type(c1._state), Leader)
+        self.assertEqual(type(c0._state), Candidate)
+        self.assertEqual(type(c1._state), Leader)
 
     def test_candidate_fails_to_win_election_so_resend_request(self):
         pass
