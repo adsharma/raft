@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import unittest
 import sys
@@ -50,7 +50,7 @@ class TestRaft( unittest.TestCase ):
 
         self._perform_hearbeat()
         expected = dict(('S%d' % i, 0) for i in range(1, N))
-        self.assertEquals( expected, self.leader._state._nextIndexes )
+        self.assertEqual( expected, self.leader._state._nextIndexes )
 
     def test_append( self ):
 
@@ -68,7 +68,7 @@ class TestRaft( unittest.TestCase ):
             i.on_message( i._messageBoard.get_message() )
 
         for i in self.leader._neighbors:
-            self.assertEquals( [{ "term": 1, "value": 100 } ], i._log )
+            self.assertEqual( [{ "term": 1, "value": 100 } ], i._log )
 
 
     def test_dirty( self ):
@@ -92,7 +92,7 @@ class TestRaft( unittest.TestCase ):
             i.on_message( i._messageBoard.get_message() )
 
         for i in self.leader._neighbors:
-            self.assertEquals( [{ "term": 1, "value": 100 } ], i._log )
+            self.assertEqual( [{ "term": 1, "value": 100 } ], i._log )
 
 
 if __name__ == '__main__':

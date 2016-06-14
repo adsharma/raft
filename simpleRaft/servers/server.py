@@ -72,7 +72,7 @@ class ZeroMQServer(Server):
                     message = self._messageBoard.get_message()
                     if not message:
                         continue # sleep wait?
-                    socket.send(message)
+                    socket.send_string(str(message))
 
             def __del__(self):
                 self.socket.close()

@@ -15,6 +15,9 @@ class BaseMessage(object):
         self._data = data
         self._term = term
 
+    def __repr__(self):
+        return "[ %d, %s ]" % (self._term, self._data)
+
     @property
     def receiver(self):
         return self._receiver
