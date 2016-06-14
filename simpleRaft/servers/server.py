@@ -10,18 +10,17 @@ class Server(object):
         self._log = log
         self._messageBoard = messageBoard
         self._neighbors = neighbors
-        self._total_nodes = 0
-
-        self._commitIndex = 0
-        self._currentTerm = 0
-
-        self._lastApplied = 0
-
-        self._lastLogIndex = 0
-        self._lastLogTerm = None
-
+        self._clear()
         self._state.set_server(self)
         self._messageBoard.set_owner(self)
+
+    def _clear(self):
+        self._total_nodes = 0
+        self._commitIndex = 0
+        self._currentTerm = 0
+        self._lastApplied = 0
+        self._lastLogIndex = 0
+        self._lastLogTerm = None
 
     def set_neighbors(self, neighbors):
         self._neighbors = neighbors
