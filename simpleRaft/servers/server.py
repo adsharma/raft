@@ -22,8 +22,11 @@ class Server(object):
         self._lastLogIndex = 0
         self._lastLogTerm = None
 
-    def set_neighbors(self, neighbors):
-        self._neighbors = neighbors
+    def add_neighbor(self, neighbor):
+        self._neighbors.append(neighbor)
+
+    def remove_neighbor(self, neighbor):
+        self._neighbors.remove(neighbor)
 
     def send_message(self, message):
         for n in self._neighbors:

@@ -31,7 +31,8 @@ class TestRaft(unittest.TestCase):
         for i in range(N):
             me = self.servers[i]
             neighbors = [n for n in self.servers if n != me]
-            me.set_neighbors(neighbors)
+            for n in neighbors:
+                me.add_neighbor(n)
 
     @classmethod
     def tearDownClass(self):
