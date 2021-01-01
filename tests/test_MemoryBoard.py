@@ -3,10 +3,8 @@
 import unittest
 import sys
 
-sys.path.append('..')
-
-from boards.memory_board import MemoryBoard
-from messages.base import BaseMessage
+from simpleRaft.boards.memory_board import MemoryBoard
+from simpleRaft.messages.base import BaseMessage
 
 
 class TestMemoryBoard(unittest.TestCase):

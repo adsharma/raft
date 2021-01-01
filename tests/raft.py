@@ -3,15 +3,13 @@
 import unittest
 import sys
 
-sys.path.append('..')
-
-from boards.memory_board import MemoryBoard
-from messages.append_entries import AppendEntriesMessage
-from messages.request_vote import RequestVoteMessage
-from messages.base import BaseMessage
-from servers.server import ZeroMQServer
-from states.leader import Leader
-from states.follower import Follower
+from simpleRaft.boards.memory_board import MemoryBoard
+from simpleRaft.messages.append_entries import AppendEntriesMessage
+from simpleRaft.messages.request_vote import RequestVoteMessage
+from simpleRaft.messages.base import BaseMessage
+from simpleRaft.servers.server import ZeroMQServer
+from simpleRaft.states.leader import Leader
+from simpleRaft.states.follower import Follower
 
 N = 5
 

@@ -3,13 +3,11 @@
 import unittest
 import sys
 
-sys.path.append('..')
-
-from boards.memory_board import MemoryBoard
-from messages.append_entries import AppendEntriesMessage
-from messages.request_vote import RequestVoteMessage
-from servers.server import Server
-from states.follower import Follower
+from simpleRaft.boards.memory_board import MemoryBoard
+from simpleRaft.messages.append_entries import AppendEntriesMessage
+from simpleRaft.messages.request_vote import RequestVoteMessage
+from simpleRaft.servers.server import Server
+from simpleRaft.states.follower import Follower
 
 
 class TestFollowerServer(unittest.TestCase):
