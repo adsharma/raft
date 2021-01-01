@@ -1,6 +1,8 @@
 import zmq
 import threading
 
+from ..states.state import State
+from ..boards.memory_board import MemoryBoard
 
 class Server(object):
 
@@ -48,7 +50,14 @@ class Server(object):
 
 
 class ZeroMQServer(Server):
-    def __init__(self, name, state, log, messageBoard, neighbors, port=6666):
+    def __init__(self, name, state: State, log=None, messageBoard=None, neighbors=None, port=0):
+        if log == None:
+            log = []
+        if neighbors == None:
+            neighbors = []
+        if messageBoard == None:
+            messageBoard = MemoryBoard()
+
         super(ZeroMQServer, self).__init__(name, state, log, messageBoard, neighbors)
         self._port = port
 

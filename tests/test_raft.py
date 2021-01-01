@@ -3,11 +3,9 @@
 import unittest
 import sys
 
-from simpleRaft.boards.memory_board import MemoryBoard
 from simpleRaft.messages.append_entries import AppendEntriesMessage
-from simpleRaft.messages.request_vote import RequestVoteMessage
-from simpleRaft.messages.base import BaseMessage
 from simpleRaft.servers.server import ZeroMQServer
+from simpleRaft.states.candidate import Candidate
 from simpleRaft.states.leader import Leader
 from simpleRaft.states.follower import Follower
 
@@ -20,19 +18,25 @@ class TestRaft(unittest.TestCase):
     def setUpClass(self):
         self.servers = []
         for i in range(N):
-            if i == 0:
-                state = Leader()
-            else:
-                state = Follower()
-            s = ZeroMQServer("S%d" % i, state, [], MemoryBoard(), [], 6666 + i)
-            if (i == 0):
-                self.leader = s
+            s = ZeroMQServer("S%d" % i, Follower(), port=6666 + i)
             self.servers.append(s)
         for i in range(N):
             me = self.servers[i]
             neighbors = [n for n in self.servers if n != me]
             for n in neighbors:
                 me.add_neighbor(n)
+
+        server0 = self.servers[0]
+        server0._state = Candidate()
+        for i in range(N):
+            if isinstance(self.servers[i]._state, Leader):
+                self.leader = self.servers[i]
+                break
+        else:
+            # Manually elect server-0 as the leader
+            self.servers[0]._state = Leader()
+            self.leader = self.servers[0]
+            self.leader._state.set_server(self.servers[0])
 
     @classmethod
     def tearDownClass(self):
