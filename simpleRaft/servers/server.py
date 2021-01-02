@@ -1,5 +1,6 @@
 import zmq
 import threading
+import logging
 
 from ..states.state import State
 from ..boards.memory_board import MemoryBoard
@@ -58,11 +59,12 @@ class ZeroMQServer(Server):
         if messageBoard == None:
             messageBoard = MemoryBoard()
 
-        super(ZeroMQServer, self).__init__(name, state, log, messageBoard, neighbors)
+        super().__init__(name, state, log, messageBoard, neighbors)
         self._port = port
 
         class SubscribeThread(threading.Thread):
             def run(thread):
+                logger = logging.getLogger('raft')
                 context = zmq.Context()
                 socket = context.socket(zmq.SUB)
                 for n in neighbors:
@@ -70,13 +72,19 @@ class ZeroMQServer(Server):
 
                 while True:
                     message = socket.recv()
+                    logger.info(f"Got message: {message}")
                     self.on_message(message)
 
         class PublishThread(threading.Thread):
             def run(thread):
+                logger = logging.getLogger('raft')
                 context = zmq.Context()
                 socket = context.socket(zmq.PUB)
-                socket.bind("tcp://*:%d" % self._port)
+                if self._port == 0:
+                    self._port = socket.bind_to_random_port("tcp://*")
+                else:
+                    socket.bind("tcp://*:%d" % self._port)
+                logger.info(f"publish port: {self._port}")
                 thread.socket = socket
 
                 while True:
