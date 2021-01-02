@@ -1,9 +1,7 @@
 from .base import BaseMessage
+from dataclasses import dataclass
 
 
+@dataclass
 class AppendEntriesMessage(BaseMessage):
-
-    _type = BaseMessage.AppendEntries
-
-    def __init__(self, sender, receiver, term, data):
-        BaseMessage.__init__(self, sender, receiver, term, data)
+    _type = BaseMessage.MessageType.AppendEntries

@@ -22,7 +22,7 @@ class TestMemoryBoard(unittest.TestCase):
 
         msg = BaseMessage(0, 0, 0, 0)
         msg2 = BaseMessage(0, 0, 0, 0)
-        msg2._timestamp -= 100
+        msg2.timestamp -= 100
 
         self.board.post_message(msg)
         self.board.post_message(msg2)

@@ -1,9 +1,8 @@
 from .base import BaseMessage
 
+from dataclasses import dataclass
 
+@dataclass
 class ResponseMessage(BaseMessage):
 
-    _type = BaseMessage.Response
-
-    def __init__(self, sender, receiver, term, data):
-        BaseMessage.__init__(self, sender, receiver, term, data)
+    _type = BaseMessage.MessageType.Response

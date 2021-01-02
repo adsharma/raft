@@ -1,43 +1,27 @@
 import time
 
+from typing import Optional
+from dataclasses import dataclass
+from enum import IntEnum
 
-class BaseMessage(object):
-    AppendEntries = 0
-    RequestVote = 1
-    RequestVoteResponse = 2
-    Response = 3
 
-    def __init__(self, sender, receiver, term, data):
-        self._timestamp = int(time.time())
+@dataclass
+class BaseMessage:
+    class MessageType(IntEnum):
+        AppendEntries = 0
+        RequestVote = 1
+        RequestVoteResponse = 2
+        Response = 3
 
-        self._sender = sender
-        self._receiver = receiver
-        self._data = data
-        self._term = term
-
-    def __repr__(self):
-        return "[ %d, %s ]" % (self._term, self._data)
-
-    @property
-    def receiver(self):
-        return self._receiver
-
-    @property
-    def sender(self):
-        return self._sender
-
-    @property
-    def data(self):
-        return self._data
-
-    @property
-    def timestamp(self):
-        return self._timestamp
-
-    @property
-    def term(self):
-        return self._term
+    sender: str
+    receiver: Optional[str]
+    term: int
+    data: str
+    timestamp: int = int(time.time())
 
     @property
     def type(self):
         return self._type
+
+    def __repr__(self):
+        return "[ %d, %s ]" % (self.term, self.data)

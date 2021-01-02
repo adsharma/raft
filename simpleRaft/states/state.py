@@ -26,14 +26,14 @@ class State(object):
             self._send_response_message(message, yes=False)
             return self, None
 
-        if(_type == BaseMessage.AppendEntries):
+        if(_type == BaseMessage.MessageType.AppendEntries):
             return self.on_append_entries(message)
-        elif(_type == BaseMessage.RequestVote):
+        elif(_type == BaseMessage.MessageType.RequestVote):
             a = self.on_vote_request(message)
             return a
-        elif(_type == BaseMessage.RequestVoteResponse):
+        elif(_type == BaseMessage.MessageType.RequestVoteResponse):
             return self.on_vote_received(message)
-        elif(_type == BaseMessage.Response):
+        elif(_type == BaseMessage.MessageType.Response):
             return self.on_response_received(message)
 
     def on_leader_timeout(self, message):

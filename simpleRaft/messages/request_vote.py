@@ -1,17 +1,13 @@
 from .base import BaseMessage
+from dataclasses import dataclass
 
 
+@dataclass
 class RequestVoteMessage(BaseMessage):
 
-    _type = BaseMessage.RequestVote
-
-    def __init__(self, sender, receiver, term, data):
-        BaseMessage.__init__(self, sender, receiver, term, data)
+    _type = BaseMessage.MessageType.RequestVote
 
 
 class RequestVoteResponseMessage(BaseMessage):
 
-    _type = BaseMessage.RequestVoteResponse
-
-    def __init__(self, sender, receiver, term, data):
-        BaseMessage.__init__(self, sender, receiver, term, data)
+    _type = BaseMessage.MessageType.RequestVoteResponse
