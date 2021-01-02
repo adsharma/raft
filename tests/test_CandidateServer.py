@@ -13,7 +13,6 @@ from simpleRaft.states.leader import Leader
 
 
 class TestCandidateServer(unittest.TestCase):
-
     def setUp(self):
         board = MemoryBoard()
         state = Follower()
@@ -32,15 +31,13 @@ class TestCandidateServer(unittest.TestCase):
         self.oserver.on_message(self.oserver._messageBoard.get_message())
 
         self.assertEqual(1, len(self.server._messageBoard._board))
-        self.assertEqual(
-            True, self.server._messageBoard.get_message().data["response"])
+        self.assertEqual(True, self.server._messageBoard.get_message().data["response"])
 
     def test_candidate_server_had_gotten_the_vote(self):
         self.oserver.on_message(self.oserver._messageBoard.get_message())
 
         self.assertEqual(1, len(self.server._messageBoard._board))
-        self.assertEqual(
-            True, self.server._messageBoard.get_message().data["response"])
+        self.assertEqual(True, self.server._messageBoard.get_message().data["response"])
 
     def test_candidate_server_wins_election(self):
         board = MemoryBoard()
@@ -144,5 +141,6 @@ class TestCandidateServer(unittest.TestCase):
     def test_multiple_candidates_fail_to_win_so_resend_requests(self):
         pass
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

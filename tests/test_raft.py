@@ -13,7 +13,6 @@ N = 5
 
 
 class TestRaft(unittest.TestCase):
-
     @classmethod
     def setUpClass(self):
         self.servers = []
@@ -59,17 +58,23 @@ class TestRaft(unittest.TestCase):
 
     def test_heartbeat(self):
         self._perform_hearbeat()
-        expected = dict(('S%d' % i, 0) for i in range(1, N))
+        expected = dict(("S%d" % i, 0) for i in range(1, N))
         self.assertEqual(expected, self.leader._state._nextIndexes)
 
     def test_append(self):
         self._perform_hearbeat()
 
-        msg = AppendEntriesMessage(0, None, 1, {
-            "prevLogIndex": 0,
-            "prevLogTerm": 0,
-            "leaderCommit": 1,
-            "entries": [{"term": 1, "value": 100}]})
+        msg = AppendEntriesMessage(
+            0,
+            None,
+            1,
+            {
+                "prevLogIndex": 0,
+                "prevLogTerm": 0,
+                "leaderCommit": 1,
+                "entries": [{"term": 1, "value": 100}],
+            },
+        )
 
         self.leader.send_message(msg)
 
@@ -87,11 +92,17 @@ class TestRaft(unittest.TestCase):
 
         self._perform_hearbeat()
 
-        msg = AppendEntriesMessage(0, None, 1, {
-            "prevLogIndex": 0,
-            "prevLogTerm": 0,
-            "leaderCommit": 1,
-            "entries": [{"term": 1, "value": 100}]})
+        msg = AppendEntriesMessage(
+            0,
+            None,
+            1,
+            {
+                "prevLogIndex": 0,
+                "prevLogTerm": 0,
+                "leaderCommit": 1,
+                "entries": [{"term": 1, "value": 100}],
+            },
+        )
 
         self.leader.send_message(msg)
 
@@ -102,5 +113,5 @@ class TestRaft(unittest.TestCase):
             self.assertEqual([{"term": 1, "value": 100}], i._log)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

@@ -2,6 +2,7 @@ from .base import BaseMessage
 
 from dataclasses import dataclass
 
+
 @dataclass
 class ResponseMessage(BaseMessage):
 

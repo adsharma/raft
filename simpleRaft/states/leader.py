@@ -4,7 +4,6 @@ from ..messages.append_entries import AppendEntriesMessage
 
 
 class Leader(State):
-
     def __init__(self):
         self._nextIndexes = defaultdict(int)
         self._matchIndex = defaultdict(int)
@@ -19,7 +18,7 @@ class Leader(State):
 
     def on_response_received(self, message):
         # Was the last AppendEntries good?
-        if(not message.data["response"]):
+        if not message.data["response"]:
             # No, so lets back up the log for this node
             self._nextIndexes[message.sender] -= 1
 
@@ -39,7 +38,8 @@ class Leader(State):
                     "prevLogTerm": previous["term"],
                     "entries": [current],
                     "leaderCommit": self._server._commitIndex,
-                })
+                },
+            )
 
             self._send_response_message(appendEntry)
         else:
@@ -47,7 +47,7 @@ class Leader(State):
             self._nextIndexes[message.sender] += 1
 
             # Are they caught up?
-            if(self._nextIndexes[message.sender] > self._server._lastLogIndex):
+            if self._nextIndexes[message.sender] > self._server._lastLogIndex:
                 self._nextIndexes[message.sender] = self._server._lastLogIndex
 
         return self, None
@@ -63,5 +63,6 @@ class Leader(State):
                 "prevLogTerm": self._server._lastLogTerm,
                 "entries": [],
                 "leaderCommit": self._server._commitIndex,
-            })
+            },
+        )
         self._server.send_message(message)

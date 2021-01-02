@@ -4,7 +4,6 @@ from ..messages.request_vote import RequestVoteMessage
 
 
 class Candidate(Voter):
-
     def set_server(self, server):
         self._server = server
         self._votes = {}
@@ -17,7 +16,7 @@ class Candidate(Voter):
         if message.sender not in self._votes:
             self._votes[message.sender] = message
 
-            if(len(list(self._votes.keys())) > (self._server._total_nodes - 1) / 2):
+            if len(list(self._votes.keys())) > (self._server._total_nodes - 1) / 2:
                 leader = Leader()
                 leader.set_server(self._server)
 
@@ -33,7 +32,8 @@ class Candidate(Voter):
             {
                 "lastLogIndex": self._server._lastLogIndex,
                 "lastLogTerm": self._server._lastLogTerm,
-            })
+            },
+        )
 
         self._server.send_message(election)
         self._last_vote = self._server._name

@@ -8,7 +8,6 @@ from simpleRaft.messages.base import BaseMessage
 
 
 class TestMemoryBoard(unittest.TestCase):
-
     def setUp(self):
         self.board = MemoryBoard()
 
@@ -29,5 +28,6 @@ class TestMemoryBoard(unittest.TestCase):
 
         self.assertEqual(msg2, self.board.get_message())
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

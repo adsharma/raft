@@ -6,7 +6,6 @@ from ..messages.response import ResponseMessage
 
 
 class State(object):
-
     def set_server(self, server):
         self._server = server
 
@@ -18,22 +17,22 @@ class State(object):
         """
         _type = message.type
 
-        if(message.term > self._server._currentTerm):
+        if message.term > self._server._currentTerm:
             self._server._currentTerm = message.term
         # Is the messages.term < ours? If so we need to tell
         #   them this so they don't get left behind.
-        elif(message.term < self._server._currentTerm):
+        elif message.term < self._server._currentTerm:
             self._send_response_message(message, yes=False)
             return self, None
 
-        if(_type == BaseMessage.MessageType.AppendEntries):
+        if _type == BaseMessage.MessageType.AppendEntries:
             return self.on_append_entries(message)
-        elif(_type == BaseMessage.MessageType.RequestVote):
+        elif _type == BaseMessage.MessageType.RequestVote:
             a = self.on_vote_request(message)
             return a
-        elif(_type == BaseMessage.MessageType.RequestVoteResponse):
+        elif _type == BaseMessage.MessageType.RequestVoteResponse:
             return self.on_vote_received(message)
-        elif(_type == BaseMessage.MessageType.Response):
+        elif _type == BaseMessage.MessageType.Response:
             return self.on_response_received(message)
 
     def on_leader_timeout(self, message):
@@ -59,12 +58,13 @@ class State(object):
 
     def _nextTimeout(self):
         self._currentTime = time.time()
-        return self._currentTime + random.randrange(self._timeout,
-                                                    2 * self._timeout)
+        return self._currentTime + random.randrange(self._timeout, 2 * self._timeout)
 
     def _send_response_message(self, msg, yes=True):
-        response = ResponseMessage(self._server._name, msg.sender, msg.term, {
-            "response": yes,
-            "currentTerm": self._server._currentTerm,
-        })
+        response = ResponseMessage(
+            self._server._name,
+            msg.sender,
+            msg.term,
+            {"response": yes, "currentTerm": self._server._currentTerm},
+        )
         self._server.send_message_response(response)

@@ -13,7 +13,6 @@ from simpleRaft.states.leader import Leader
 
 
 class TestLeaderServer(unittest.TestCase):
-
     def setUp(self):
 
         followers = []
@@ -41,18 +40,25 @@ class TestLeaderServer(unittest.TestCase):
     def test_leader_server_sends_heartbeat_to_all_neighbors(self):
 
         self._perform_hearbeat()
-        self.assertEqual(
-            {1: 0, 2: 0, 3: 0}, self.leader._state._nextIndexes)
+        self.assertEqual({1: 0, 2: 0, 3: 0}, self.leader._state._nextIndexes)
 
-    def test_leader_server_sends_appendentries_to_all_neighbors_and_is_appended_to_their_logs(self):
+    def test_leader_server_sends_appendentries_to_all_neighbors_and_is_appended_to_their_logs(
+        self
+    ):
 
         self._perform_hearbeat()
 
-        msg = AppendEntriesMessage(0, None, 1, {
-            "prevLogIndex": 0,
-            "prevLogTerm": 0,
-            "leaderCommit": 1,
-            "entries": [{"term": 1, "value": 100}]})
+        msg = AppendEntriesMessage(
+            0,
+            None,
+            1,
+            {
+                "prevLogIndex": 0,
+                "prevLogTerm": 0,
+                "leaderCommit": 1,
+                "entries": [{"term": 1, "value": 100}],
+            },
+        )
 
         self.leader.send_message(msg)
 
@@ -62,7 +68,9 @@ class TestLeaderServer(unittest.TestCase):
         for i in self.leader._neighbors:
             self.assertEqual([{"term": 1, "value": 100}], i._log)
 
-    def test_leader_server_sends_appendentries_to_all_neighbors_but_some_have_dirtied_logs(self):
+    def test_leader_server_sends_appendentries_to_all_neighbors_but_some_have_dirtied_logs(
+        self
+    ):
 
         self.leader._neighbors[0]._log.append({"term": 2, "value": 100})
         self.leader._neighbors[0]._log.append({"term": 2, "value": 200})
@@ -71,11 +79,17 @@ class TestLeaderServer(unittest.TestCase):
 
         self._perform_hearbeat()
 
-        msg = AppendEntriesMessage(0, None, 1, {
-            "prevLogIndex": 0,
-            "prevLogTerm": 0,
-            "leaderCommit": 1,
-            "entries": [{"term": 1, "value": 100}]})
+        msg = AppendEntriesMessage(
+            0,
+            None,
+            1,
+            {
+                "prevLogIndex": 0,
+                "prevLogTerm": 0,
+                "leaderCommit": 1,
+                "entries": [{"term": 1, "value": 100}],
+            },
+        )
 
         self.leader.send_message(msg)
 
@@ -85,5 +99,6 @@ class TestLeaderServer(unittest.TestCase):
         for i in self.leader._neighbors:
             self.assertEqual([{"term": 1, "value": 100}], i._log)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()
