@@ -2,9 +2,12 @@ import time
 import uuid
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import Any, Optional, Union
+from serde import serialize, deserialize
+from typing import Any, Dict, Optional, Union
 
 
+@deserialize
+@serialize
 @dataclass
 class BaseMessage:
     class MessageType(IntEnum):
@@ -16,7 +19,7 @@ class BaseMessage:
     sender: Union[int, uuid.UUID]  # int used only on tests
     receiver: Union[int, uuid.UUID, None]
     term: int
-    data: Any
+    data: Union[int, str, Dict]
     timestamp: int = int(time.time())
 
     @property
