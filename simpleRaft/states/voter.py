@@ -23,4 +23,4 @@ class Voter(State):
         voteResponse = RequestVoteResponseMessage(
             self._server._name, msg.sender, msg.term, {"response": yes}
         )
-        self._server.send_message_response(voteResponse)
+        self._server.receive_message(voteResponse)

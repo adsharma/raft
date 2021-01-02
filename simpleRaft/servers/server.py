@@ -7,7 +7,7 @@ from ..boards.memory_board import MemoryBoard
 from ..states.state import State
 
 
-class Server(object):
+class Server:
     def __init__(self, name, state, log, messageBoard, neighbors):
         self._name = name
         self._state = state
@@ -26,29 +26,17 @@ class Server(object):
         self._lastLogIndex = 0
         self._lastLogTerm = None
 
-    def add_neighbor(self, neighbor):
-        self._neighbors.append(neighbor)
-
-    def remove_neighbor(self, neighbor):
-        self._neighbors.remove(neighbor)
-
     def send_message(self, message):
-        for n in self._neighbors:
-            message._receiver = n._name
-            n.post_message(message)
+        ...
 
-    def send_message_response(self, message):
-        n = [n for n in self._neighbors if n._name == message.receiver]
-        if len(n) > 0:
-            n[0].post_message(message)
+    def receive_message(self, message):
+        ...
 
     def post_message(self, message):
-        self._messageBoard.post_message(message)
+        ...
 
     def on_message(self, message):
-        state, response = self._state.on_message(message)
-
-        self._state = state
+        ...
 
 
 class ZeroMQServer(Server):
@@ -109,3 +97,27 @@ class ZeroMQServer(Server):
 
     def __del__(self):
         self.publishThread.socket.close()
+
+    def add_neighbor(self, neighbor):
+        self._neighbors.append(neighbor)
+
+    def remove_neighbor(self, neighbor):
+        self._neighbors.remove(neighbor)
+
+    def send_message(self, message):
+        for n in self._neighbors:
+            message._receiver = n._name
+            n.post_message(message)
+
+    def receive_message(self, message):
+        n = [n for n in self._neighbors if n._name == message.receiver]
+        if len(n) > 0:
+            n[0].post_message(message)
+
+    def post_message(self, message):
+        self._messageBoard.post_message(message)
+
+    def on_message(self, message):
+        state, response = self._state.on_message(message)
+
+        self._state = state

@@ -5,7 +5,7 @@ import unittest
 from simpleRaft.boards.memory_board import MemoryBoard
 from simpleRaft.messages.append_entries import AppendEntriesMessage
 from simpleRaft.messages.request_vote import RequestVoteMessage
-from simpleRaft.servers.server import Server
+from simpleRaft.servers.server import ZeroMQServer as Server
 from simpleRaft.states.follower import Follower
 
 

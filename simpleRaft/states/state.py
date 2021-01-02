@@ -74,4 +74,4 @@ class State(object):
             msg.term,
             {"response": yes, "currentTerm": self._server._currentTerm},
         )
-        self._server.send_message_response(response)
+        self._server.receive_message(response)

@@ -7,7 +7,6 @@ class Candidate(Voter):
     def set_server(self, server):
         self._server = server
         self._votes = {}
-        self._start_election()
 
     def on_vote_request(self, message):
         return self, None

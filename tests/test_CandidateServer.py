@@ -5,7 +5,7 @@ import unittest
 from simpleRaft.boards.memory_board import MemoryBoard
 from simpleRaft.messages.append_entries import AppendEntriesMessage
 from simpleRaft.messages.request_vote import RequestVoteMessage
-from simpleRaft.servers.server import Server
+from simpleRaft.servers.server import ZeroMQServer as Server
 from simpleRaft.states.candidate import Candidate
 from simpleRaft.states.follower import Follower
 from simpleRaft.states.leader import Leader
@@ -13,15 +13,13 @@ from simpleRaft.states.leader import Leader
 
 class TestCandidateServer(unittest.TestCase):
     def setUp(self):
-        board = MemoryBoard()
-        state = Follower()
-        self.oserver = Server(0, state, [], board, [])
+        self.oserver = Server(0, Follower())
+        self.server = Server(1, Candidate())
 
-        board = MemoryBoard()
-        state = Candidate()
-        self.server = Server(1, state, [], board, [self.oserver])
-
+        self.server._neighbors.append(self.oserver)
         self.oserver._neighbors.append(self.server)
+
+        self.server._state._start_election()
 
     def test_candidate_server_had_intiated_the_election(self):
 
@@ -39,20 +37,18 @@ class TestCandidateServer(unittest.TestCase):
         self.assertEqual(True, self.server._messageBoard.get_message().data["response"])
 
     def test_candidate_server_wins_election(self):
-        board = MemoryBoard()
-        state = Follower()
-        server0 = Server(0, state, [], board, [])
+        server0 = Server(0, Follower())
+        oserver = Server(1, Follower())
 
-        board = MemoryBoard()
-        state = Follower()
-        oserver = Server(1, state, [], board, [])
+        server = Server(2, Candidate())
 
-        board = MemoryBoard()
-        state = Candidate()
-        server = Server(2, state, [], board, [oserver, server0])
+        server._neighbors.append(oserver)
+        server._neighbors.append(server0)
 
         server0._neighbors.append(server)
         oserver._neighbors.append(server)
+
+        server._state._start_election()
 
         oserver.on_message(oserver._messageBoard.get_message())
         server0.on_message(server0._messageBoard.get_message())
@@ -68,17 +64,12 @@ class TestCandidateServer(unittest.TestCase):
         followers = []
 
         for i in range(4):
-            board = MemoryBoard()
-            state = Follower()
-            followers.append(Server(i, state, [], board, []))
+            followers.append(Server(i, Follower()))
 
-        board = MemoryBoard()
-        state = Candidate()
-        c0 = Server(5, state, [], board, followers[0:2])
-
-        board = MemoryBoard()
-        state = Candidate()
-        c1 = Server(6, state, [], board, followers[2:])
+        c0 = Server(5, Candidate(), neighbors=followers[0:2])
+        c1 = Server(6, Candidate(), neighbors=followers[2:])
+        c0._state._start_election()
+        c1._state._start_election()
 
         for i in range(2):
             followers[i]._neighbors.append(c0)
@@ -102,17 +93,14 @@ class TestCandidateServer(unittest.TestCase):
         followers = []
 
         for i in range(6):
-            board = MemoryBoard()
-            state = Follower()
-            followers.append(Server(i, state, [], board, []))
+            followers.append(Server(i, Follower()))
 
         board = MemoryBoard()
         state = Candidate()
-        c0 = Server(7, state, [], board, followers[0:2])
-
-        board = MemoryBoard()
-        state = Candidate()
-        c1 = Server(8, state, [], board, followers[2:])
+        c0 = Server(7, Candidate(), neighbors=followers[0:2])
+        c1 = Server(8, Candidate(), neighbors=followers[2:])
+        c0._state._start_election()
+        c1._state._start_election()
 
         for i in range(2):
             followers[i]._neighbors.append(c0)

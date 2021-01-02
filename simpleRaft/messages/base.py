@@ -2,8 +2,9 @@ import time
 import uuid
 from dataclasses import dataclass
 from enum import IntEnum
-from serde import serialize, deserialize
 from typing import Any, Dict, Optional, Union
+
+from serde import deserialize, serialize
 
 
 @deserialize
