@@ -1,9 +1,10 @@
-import zmq
-import threading
 import logging
+import threading
 
-from ..states.state import State
+import zmq
+
 from ..boards.memory_board import MemoryBoard
+from ..states.state import State
 
 
 class Server(object):
@@ -65,7 +66,7 @@ class ZeroMQServer(Server):
         self._port = port
 
         class SubscribeThread(threading.Thread):
-            def run(thread):
+            def run(thread):  # type: ignore
                 logger = logging.getLogger("raft")
                 context = zmq.Context()
                 socket = context.socket(zmq.SUB)
@@ -78,7 +79,7 @@ class ZeroMQServer(Server):
                     self.on_message(message)
 
         class PublishThread(threading.Thread):
-            def run(thread):
+            def run(thread):  # type: ignore
                 logger = logging.getLogger("raft")
                 context = zmq.Context()
                 socket = context.socket(zmq.PUB)

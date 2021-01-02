@@ -1,12 +1,19 @@
-import time
 import random
+import time
+from typing import TYPE_CHECKING
 
 from ..messages.base import BaseMessage
 from ..messages.response import ResponseMessage
 
+if TYPE_CHECKING:
+    from ..servers.server import Server
+
 
 class State(object):
-    def set_server(self, server):
+    def __init__(self, timeout: int = 500):
+        self._timeout = timeout
+
+    def set_server(self, server: "Server", timeout: int = 500):
         self._server = server
 
     def on_message(self, message):

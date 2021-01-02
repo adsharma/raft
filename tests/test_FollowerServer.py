@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import unittest
-import sys
 
 from simpleRaft.boards.memory_board import MemoryBoard
 from simpleRaft.messages.append_entries import AppendEntriesMessage

@@ -1,44 +1,44 @@
 #!/usr/bin/env python3
 
 import unittest
-import sys
+import uuid
 
 from simpleRaft.messages.append_entries import AppendEntriesMessage
 from simpleRaft.servers.server import ZeroMQServer
 from simpleRaft.states.candidate import Candidate
-from simpleRaft.states.leader import Leader
 from simpleRaft.states.follower import Follower
+from simpleRaft.states.leader import Leader
 
 N = 5
 
 
 class TestRaft(unittest.TestCase):
     @classmethod
-    def setUpClass(self):
-        self.servers = []
+    def setUpClass(cls):
+        cls.servers = []
         for i in range(N):
             s = ZeroMQServer("S%d" % i, Follower(), port=6666 + i)
-            self.servers.append(s)
+            cls.servers.append(s)
         for i in range(N):
-            me = self.servers[i]
-            neighbors = [n for n in self.servers if n != me]
+            me = cls.servers[i]
+            neighbors = [n for n in cls.servers if n != me]
             for n in neighbors:
                 me.add_neighbor(n)
 
-        server0 = self.servers[0]
+        server0 = cls.servers[0]
         server0._state = Candidate()
         for i in range(N):
-            if isinstance(self.servers[i]._state, Leader):
-                self.leader = self.servers[i]
+            if isinstance(cls.servers[i]._state, Leader):
+                cls.leader = cls.servers[i]
                 break
         else:
             # Manually elect server-0 as the leader
-            self.servers[0]._state = Leader()
-            self.leader = self.servers[0]
-            self.leader._state.set_server(self.servers[0])
+            cls.servers[0]._state = Leader()
+            cls.leader = cls.servers[0]
+            cls.leader._state.set_server(cls.servers[0])
 
     @classmethod
-    def tearDownClass(self):
+    def tearDownClass(cls):
         pass
 
     def setUp(self):

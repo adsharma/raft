@@ -1,5 +1,6 @@
-import redis
-from board import Board
+import redis  # type: ignore
+
+from .board import Board
 
 
 class RedisBoard(Board):
@@ -14,11 +15,9 @@ class RedisBoard(Board):
 
     def post_message(self, message):
         """This will append the message to the list."""
-        pass
 
     def get_message(self):
         """This will pop a message off the list."""
-        pass
 
     def _key(self):
         if not self.key:

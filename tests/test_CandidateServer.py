@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 
 import unittest
-import sys
 
 from simpleRaft.boards.memory_board import MemoryBoard
 from simpleRaft.messages.append_entries import AppendEntriesMessage
 from simpleRaft.messages.request_vote import RequestVoteMessage
 from simpleRaft.servers.server import Server
-from simpleRaft.states.follower import Follower
 from simpleRaft.states.candidate import Candidate
+from simpleRaft.states.follower import Follower
 from simpleRaft.states.leader import Leader
 
 

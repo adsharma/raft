@@ -1,6 +1,6 @@
-from .voter import Voter
-from .leader import Leader
 from ..messages.request_vote import RequestVoteMessage
+from .leader import Leader
+from .voter import Voter
 
 
 class Candidate(Voter):

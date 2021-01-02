@@ -1,6 +1,6 @@
-from .base import BaseMessage
-
 from dataclasses import dataclass
+
+from .base import BaseMessage
 
 
 @dataclass

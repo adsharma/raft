@@ -1,10 +1,10 @@
-from .state import State
-
 from ..messages.request_vote import RequestVoteResponseMessage
+from .state import State
 
 
 class Voter(State):
     def __init__(self):
+        super().__init__()
         self._last_vote = None
 
     def on_vote_request(self, message):
