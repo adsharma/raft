@@ -1,3 +1,4 @@
+import logging
 import random
 import time
 from typing import TYPE_CHECKING
@@ -8,6 +9,8 @@ from ..messages.response import ResponseMessage
 if TYPE_CHECKING:
     from ..servers.server import Server
 
+
+logger = logging.getLogger("raft")
 
 class State(object):
     def __init__(self, timeout: int = 500):
@@ -23,6 +26,7 @@ class State(object):
 
         """
         _type = message.type
+        logger.debug(message)
 
         if message.term > self._server._currentTerm:
             self._server._currentTerm = message.term

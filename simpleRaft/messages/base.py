@@ -17,11 +17,17 @@ class BaseMessage:
         RequestVoteResponse = 2
         Response = 3
 
+    EXT_DICT = {}
+
     sender: Union[int, uuid.UUID]  # int used only on tests
     receiver: Union[int, uuid.UUID, None]
     term: int
     data: Union[int, str, Dict]
     timestamp: int = int(time.time())
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        cls.EXT_DICT[cls._type] = cls  # type: ignore
 
     @property
     def type(self):
