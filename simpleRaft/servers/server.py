@@ -1,7 +1,8 @@
+import asyncio
 import logging
-import threading
 
 import zmq
+import zmq.asyncio
 
 from ..boards.memory_board import MemoryBoard
 from ..states.state import State
@@ -26,16 +27,16 @@ class Server:
         self._lastLogIndex = 0
         self._lastLogTerm = None
 
-    def send_message(self, message):
+    async def send_message(self, message):
         ...
 
-    def receive_message(self, message):
+    async def receive_message(self, message):
         ...
 
-    def post_message(self, message):
+    async def post_message(self, message):
         ...
 
-    def on_message(self, message):
+    async def on_message(self, message):
         ...
 
 
@@ -52,51 +53,53 @@ class ZeroMQServer(Server):
 
         super().__init__(name, state, log, messageBoard, neighbors)
         self._port = port
+        self._stop = False
 
-        class SubscribeThread(threading.Thread):
-            def run(thread):  # type: ignore
-                logger = logging.getLogger("raft")
-                context = zmq.Context()
-                socket = context.socket(zmq.SUB)
-                for n in neighbors:
-                    socket.connect("tcp://%s:%d" % (n._name, n._port))
+    async def subscriber(self):
+        logger = logging.getLogger("raft")
+        context = zmq.asyncio.Context()
+        socket = context.socket(zmq.SUB)
+        for n in self._neighbors:
+            socket.connect("tcp://%s:%d" % (n._name, n._port))
 
-                while True:
-                    message = socket.recv()
-                    logger.info(f"Got message: {message}")
-                    self.on_message(message)
+        while not self._stop:
+            try:
+                message = await socket.recv()
+            except zmq.error.ContextTerminated as e:
+                break
+            if not message:
+                continue
+            logger.debug(f"Got message: {message}")
+            await self.on_message(message)
+        socket.close()
 
-        class PublishThread(threading.Thread):
-            def run(thread):  # type: ignore
-                logger = logging.getLogger("raft")
-                context = zmq.Context()
-                socket = context.socket(zmq.PUB)
-                if self._port == 0:
-                    self._port = socket.bind_to_random_port("tcp://*")
-                else:
-                    socket.bind("tcp://*:%d" % self._port)
-                logger.info(f"publish port: {self._port}")
-                thread.socket = socket
+    async def publisher(self):
+        logger = logging.getLogger("raft")
+        context = zmq.asyncio.Context()
+        socket = context.socket(zmq.PUB)
+        if self._port == 0:
+            self._port = socket.bind_to_random_port("tcp://*")
+        else:
+            socket.bind("tcp://*:%d" % self._port)
+        logger.info(f"publish port: {self._port}")
 
-                while True:
-                    message = self._messageBoard.get_message()
-                    if not message:
-                        continue  # sleep wait?
-                    socket.send_string(str(message))
+        while not self._stop:
+            message = await self._messageBoard.get_message()
+            if not message:
+                continue  # sleep wait?
+            try:
+                await socket.send_string(str(message))
+            except Exception as e:
+                print(e)
+                break
+        socket.close()
 
-            def __del__(self):
-                self.socket.close()
+    async def run(self):
+        asyncio.create_task(self.publisher())
+        asyncio.create_task(self.subscriber())
 
-        self.subscribeThread = SubscribeThread()
-        self.publishThread = PublishThread()
-
-        self.subscribeThread.daemon = True
-        self.subscribeThread.start()
-        self.publishThread.daemon = True
-        self.publishThread.start()
-
-    def __del__(self):
-        self.publishThread.socket.close()
+    def stop(self):
+        self._stop = True
 
     def add_neighbor(self, neighbor):
         self._neighbors.append(neighbor)
@@ -104,20 +107,20 @@ class ZeroMQServer(Server):
     def remove_neighbor(self, neighbor):
         self._neighbors.remove(neighbor)
 
-    def send_message(self, message):
+    async def send_message(self, message):
         for n in self._neighbors:
             message._receiver = n._name
-            n.post_message(message)
+            await n.post_message(message)
 
-    def receive_message(self, message):
+    async def receive_message(self, message):
         n = [n for n in self._neighbors if n._name == message.receiver]
         if len(n) > 0:
-            n[0].post_message(message)
+            await n[0].post_message(message)
 
-    def post_message(self, message):
-        self._messageBoard.post_message(message)
+    async def post_message(self, message):
+        await self._messageBoard.post_message(message)
 
-    def on_message(self, message):
-        state, response = self._state.on_message(message)
+    async def on_message(self, message):
+        state, response = await self._state.on_message(message)
 
         self._state = state

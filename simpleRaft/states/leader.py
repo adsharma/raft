@@ -1,6 +1,8 @@
+import asyncio
 from collections import defaultdict
 
 from ..messages.append_entries import AppendEntriesMessage
+from .config import HEART_BEAT_INTERVAL
 from .state import State
 
 
@@ -11,13 +13,16 @@ class Leader(State):
 
     def set_server(self, server):
         self._server = server
-        self._send_heart_beat()
+        loop = asyncio.get_event_loop()
+        heart_beat_task = loop.create_task(self._send_heart_beat())
 
         for n in self._server._neighbors:
             self._nextIndexes[n._name] = self._server._lastLogIndex + 1
             self._matchIndex[n._name] = 0
 
-    def on_response_received(self, message):
+        return heart_beat_task
+
+    async def on_response_received(self, message):
         # Was the last AppendEntries good?
         if not message.data["response"]:
             # No, so lets back up the log for this node
@@ -42,7 +47,7 @@ class Leader(State):
                 },
             )
 
-            self._send_response_message(appendEntry)
+            await self._send_response_message(appendEntry)
         else:
             # The last append was good so increase their index.
             self._nextIndexes[message.sender] += 1
@@ -53,7 +58,7 @@ class Leader(State):
 
         return self, None
 
-    def _send_heart_beat(self):
+    async def _send_heart_beat(self):
         message = AppendEntriesMessage(
             self._server._name,
             None,
@@ -66,4 +71,10 @@ class Leader(State):
                 "leaderCommit": self._server._commitIndex,
             },
         )
-        self._server.send_message(message)
+        await self._server.send_message(message)
+
+        async def schedule_another_beat():
+            await asyncio.sleep(HEART_BEAT_INTERVAL)
+            await self._send_heart_beat()
+
+        asyncio.create_task(schedule_another_beat())

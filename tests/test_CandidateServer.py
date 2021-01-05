@@ -11,32 +11,38 @@ from simpleRaft.states.follower import Follower
 from simpleRaft.states.leader import Leader
 
 
-class TestCandidateServer(unittest.TestCase):
-    def setUp(self):
+class TestCandidateServer(unittest.IsolatedAsyncioTestCase):
+    async def asyncSetUp(self):
         self.oserver = Server(0, Follower())
-        self.server = Server(1, Candidate())
+        self.server = Server(1, Follower())
 
         self.server._neighbors.append(self.oserver)
         self.oserver._neighbors.append(self.server)
 
-        self.server._state._start_election()
+        candidate = Candidate()
+        self.server._state = candidate
+        await candidate.set_server(self.server)
 
-    def test_candidate_server_had_intiated_the_election(self):
+    async def test_candidate_server_had_intiated_the_election(self):
 
-        self.assertEqual(1, len(self.oserver._messageBoard._board))
+        self.assertEqual(1, len(self.oserver._messageBoard._board._queue))
 
-        self.oserver.on_message(self.oserver._messageBoard.get_message())
+        await self.oserver.on_message(await self.oserver._messageBoard.get_message())
 
-        self.assertEqual(1, len(self.server._messageBoard._board))
-        self.assertEqual(True, self.server._messageBoard.get_message().data["response"])
+        self.assertEqual(1, len(self.server._messageBoard._board._queue))
+        self.assertEqual(
+            True, (await self.server._messageBoard.get_message()).data["response"]
+        )
 
-    def test_candidate_server_had_gotten_the_vote(self):
-        self.oserver.on_message(self.oserver._messageBoard.get_message())
+    async def test_candidate_server_had_gotten_the_vote(self):
+        await self.oserver.on_message(await self.oserver._messageBoard.get_message())
 
-        self.assertEqual(1, len(self.server._messageBoard._board))
-        self.assertEqual(True, self.server._messageBoard.get_message().data["response"])
+        self.assertEqual(1, len(self.server._messageBoard._board._queue))
+        self.assertEqual(
+            True, (await self.server._messageBoard.get_message()).data["response"]
+        )
 
-    def test_candidate_server_wins_election(self):
+    async def test_candidate_server_wins_election(self):
         server0 = Server(0, Follower())
         oserver = Server(1, Follower())
 
@@ -48,19 +54,19 @@ class TestCandidateServer(unittest.TestCase):
         server0._neighbors.append(server)
         oserver._neighbors.append(server)
 
-        server._state._start_election()
+        await server._state._start_election()
 
-        oserver.on_message(oserver._messageBoard.get_message())
-        server0.on_message(server0._messageBoard.get_message())
+        await oserver.on_message(await oserver._messageBoard.get_message())
+        await server0.on_message(await server0._messageBoard.get_message())
 
         server._total_nodes = 3
 
-        server.on_message(server._messageBoard.get_message())
-        server.on_message(server._messageBoard.get_message())
+        await server.on_message(await server._messageBoard.get_message())
+        await server.on_message(await server._messageBoard.get_message())
 
         self.assertEqual(type(server._state), Leader)
 
-    def test_two_candidates_tie(self):
+    async def test_two_candidates_tie(self):
         followers = []
 
         for i in range(4):
@@ -68,28 +74,32 @@ class TestCandidateServer(unittest.TestCase):
 
         c0 = Server(5, Candidate(), neighbors=followers[0:2])
         c1 = Server(6, Candidate(), neighbors=followers[2:])
-        c0._state._start_election()
-        c1._state._start_election()
+        await c0._state._start_election()
+        await c1._state._start_election()
 
         for i in range(2):
             followers[i]._neighbors.append(c0)
-            followers[i].on_message(followers[i]._messageBoard.get_message())
+            await followers[i].on_message(
+                await followers[i]._messageBoard.get_message()
+            )
 
         for i in range(2, 4):
             followers[i]._neighbors.append(c1)
-            followers[i].on_message(followers[i]._messageBoard.get_message())
+            await followers[i].on_message(
+                await followers[i]._messageBoard.get_message()
+            )
 
         c0._total_nodes = 6
         c1._total_nodes = 6
 
         for i in range(2):
-            c0.on_message(c0._messageBoard.get_message())
-            c1.on_message(c1._messageBoard.get_message())
+            await c0.on_message(await c0._messageBoard.get_message())
+            await c1.on_message(await c1._messageBoard.get_message())
 
         self.assertEqual(type(c0._state), Candidate)
         self.assertEqual(type(c1._state), Candidate)
 
-    def test_two_candidates_one_wins(self):
+    async def test_two_candidates_one_wins(self):
         followers = []
 
         for i in range(6):
@@ -99,25 +109,29 @@ class TestCandidateServer(unittest.TestCase):
         state = Candidate()
         c0 = Server(7, Candidate(), neighbors=followers[0:2])
         c1 = Server(8, Candidate(), neighbors=followers[2:])
-        c0._state._start_election()
-        c1._state._start_election()
+        await c0._state._start_election()
+        await c1._state._start_election()
 
         for i in range(2):
             followers[i]._neighbors.append(c0)
-            followers[i].on_message(followers[i]._messageBoard.get_message())
+            await followers[i].on_message(
+                await followers[i]._messageBoard.get_message()
+            )
 
         for i in range(2, 6):
             followers[i]._neighbors.append(c1)
-            followers[i].on_message(followers[i]._messageBoard.get_message())
+            await followers[i].on_message(
+                await followers[i]._messageBoard.get_message()
+            )
 
         c0._total_nodes = 7
         c1._total_nodes = 7
 
         for i in range(2):
-            c0.on_message(c0._messageBoard.get_message())
+            await c0.on_message(await c0._messageBoard.get_message())
 
         for i in range(4):
-            c1.on_message(c1._messageBoard.get_message())
+            await c1.on_message(await c1._messageBoard.get_message())
 
         self.assertEqual(type(c0._state), Candidate)
         self.assertEqual(type(c1._state), Leader)

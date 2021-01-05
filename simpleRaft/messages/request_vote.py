@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+
 from serde import deserialize, serialize
 
 from .base import BaseMessage

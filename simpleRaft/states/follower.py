@@ -1,17 +1,18 @@
+from .config import FOLLOWER_TIMEOUT
 from .voter import Voter
 
 
 class Follower(Voter):
-    def __init__(self, timeout=500):
+    def __init__(self, timeout=FOLLOWER_TIMEOUT):
         super().__init__(timeout)
 
-    def on_append_entries(self, message):
+    async def on_append_entries(self, message):
         self._timeoutTime = self._nextTimeout()
         self.timer.cancel()
         self.timer = self.restart_timer()
 
         if message.term < self._server._currentTerm:
-            self._send_response_message(message, yes=False)
+            await self._send_response_message(message, yes=False)
             return self, None
 
         if message.data != {}:
@@ -27,7 +28,7 @@ class Follower(Voter):
             # Can't possibly be up-to-date with the log
             # If the log is smaller than the preLogIndex
             if len(log) < data["prevLogIndex"]:
-                self._send_response_message(message, yes=False)
+                await self._send_response_message(message, yes=False)
                 return self, None
 
             # We need to hold the induction proof of the algorithm here.
@@ -42,7 +43,7 @@ class Follower(Voter):
                 #   from this prevLogIndex and forward and send a failure
                 #   to the server.
                 log = log[: data["prevLogIndex"]]
-                self._send_response_message(message, yes=False)
+                await self._send_response_message(message, yes=False)
                 self._server._log = log
                 self._server._lastLogIndex = data["prevLogIndex"]
                 self._server._lastLogTerm = data["prevLogTerm"]
@@ -66,7 +67,7 @@ class Follower(Voter):
                         log.append(e)
                         self._server._commitIndex += 1
 
-                    self._send_response_message(message)
+                    await self._send_response_message(message)
                     self._server._lastLogIndex = len(log) - 1
                     self._server._lastLogTerm = log[-1]["term"]
                     self._commitIndex = len(log) - 1
@@ -85,9 +86,9 @@ class Follower(Voter):
                         self._server._lastLogTerm = log[-1]["term"]
                         self._commitIndex = len(log) - 1
                         self._server._log = log
-                        self._send_response_message(message)
+                        await self._send_response_message(message)
 
-            self._send_response_message(message)
+            await self._send_response_message(message)
             return self, None
         else:
             return self, None

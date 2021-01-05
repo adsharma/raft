@@ -12,9 +12,9 @@ from simpleRaft.states.leader import Leader
 N = 5
 
 
-class TestRaft(unittest.TestCase):
+class TestRaft(unittest.IsolatedAsyncioTestCase):
     @classmethod
-    def setUpClass(cls):
+    async def asyncSetUpClass(cls):
         cls.servers = []
         for i in range(N):
             s = ZeroMQServer("S%d" % i, Follower(), port=6666 + i)
@@ -33,36 +33,37 @@ class TestRaft(unittest.TestCase):
                 break
         else:
             # Manually elect server-0 as the leader
-            cls.servers[0]._state = Leader()
+            cls.servers[0]._state = leader = Leader()
             cls.leader = cls.servers[0]
-            cls.leader._state.set_server(cls.servers[0])
+            await leader.set_server(cls.leader)
 
     @classmethod
-    def tearDownClass(cls):
+    async def asyncTearDownClass(cls):
         pass
 
-    def setUp(self):
+    async def asyncSetUp(self):
+        await self.asyncSetUpClass()
         for i in range(N):
             self.servers[i]._state.__init__()
             self.servers[i]._messageBoard.__init__()
             self.servers[i]._log.clear()
             self.servers[i]._clear()
 
-    def _perform_hearbeat(self):
-        self.leader._state._send_heart_beat()
+    async def _perform_heart_beat(self):
+        await self.leader._state._send_heart_beat()
         for i in self.leader._neighbors:
-            i.on_message(i._messageBoard.get_message())
+            await i.on_message(await i._messageBoard.get_message())
 
-        for i in self.leader._messageBoard._board:
-            self.leader.on_message(i)
+        for _, i in self.leader._messageBoard._board._queue:
+            await self.leader.on_message(i)
 
-    def test_heartbeat(self):
-        self._perform_hearbeat()
+    async def test_heart_beat(self):
+        await self._perform_heart_beat()
         expected = dict(("S%d" % i, 0) for i in range(1, N))
         self.assertEqual(expected, self.leader._state._nextIndexes)
 
-    def test_append(self):
-        self._perform_hearbeat()
+    async def test_append(self):
+        await self._perform_heart_beat()
 
         msg = AppendEntriesMessage(
             0,
@@ -76,21 +77,21 @@ class TestRaft(unittest.TestCase):
             },
         )
 
-        self.leader.send_message(msg)
+        await self.leader.send_message(msg)
 
         for i in self.leader._neighbors:
-            i.on_message(i._messageBoard.get_message())
+            await i.on_message(await i._messageBoard.get_message())
 
         for i in self.leader._neighbors:
             self.assertEqual([{"term": 1, "value": 100}], i._log)
 
-    def test_dirty(self):
+    async def test_dirty(self):
         self.leader._neighbors[0]._log.append({"term": 2, "value": 100})
         self.leader._neighbors[0]._log.append({"term": 2, "value": 200})
         self.leader._neighbors[1]._log.append({"term": 3, "value": 200})
         self.leader._log.append({"term": 1, "value": 100})
 
-        self._perform_hearbeat()
+        await self._perform_heart_beat()
 
         msg = AppendEntriesMessage(
             0,
@@ -104,10 +105,10 @@ class TestRaft(unittest.TestCase):
             },
         )
 
-        self.leader.send_message(msg)
+        await self.leader.send_message(msg)
 
         for i in self.leader._neighbors:
-            i.on_message(i._messageBoard.get_message())
+            await i.on_message(await i._messageBoard.get_message())
 
         for i in self.leader._neighbors:
             self.assertEqual([{"term": 1, "value": 100}], i._log)
