@@ -3,12 +3,12 @@ from .voter import Voter
 
 class Follower(Voter):
     def __init__(self, timeout=500):
-        super().__init__()
-        self._timeout = timeout
-        self._timeoutTime = self._nextTimeout()
+        super().__init__(timeout)
 
     def on_append_entries(self, message):
         self._timeoutTime = self._nextTimeout()
+        self.timer.cancel()
+        self.timer = self.restart_timer()
 
         if message.term < self._server._currentTerm:
             self._send_response_message(message, yes=False)

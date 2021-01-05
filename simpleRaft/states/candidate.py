@@ -4,6 +4,10 @@ from .voter import Voter
 
 
 class Candidate(Voter):
+    def __init__(self, timeout=500):
+        super().__init__(timeout)
+        self._start_election()
+
     def set_server(self, server):
         self._server = server
         self._votes = {}
