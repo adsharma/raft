@@ -47,24 +47,30 @@ class State:
 
     async def on_leader_timeout(self, message):
         """This is called when the leader timeout is reached."""
+        return self, None
 
     async def on_vote_request(self, message):
         """This is called when there is a vote request."""
+        return self, None
 
     async def on_vote_received(self, message):
         """This is called when this node recieves a vote."""
+        return self, None
 
     async def on_append_entries(self, message):
         """This is called when there is a request to
         append an entry to the log.
 
         """
+        return self, None
 
     async def on_response_received(self, message):
         """This is called when a response is sent back to the Leader"""
+        return self, None
 
     async def on_client_command(self, message):
         """This is called when there is a client request."""
+        return self, None
 
     def _nextTimeout(self):
         return random.randrange(self._timeout, 2 * self._timeout)

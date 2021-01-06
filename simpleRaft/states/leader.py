@@ -1,10 +1,12 @@
 import asyncio
+import logging
 from collections import defaultdict
 
 from ..messages.append_entries import AppendEntriesMessage
 from .config import HEART_BEAT_INTERVAL
 from .state import State
 
+logger = logging.getLogger("raft")
 
 class Leader(State):
     def __init__(self):
@@ -14,6 +16,7 @@ class Leader(State):
 
     def set_server(self, server):
         self._server = server
+        logger.info(f"{self._server._name}: New Leader")
         loop = asyncio.get_event_loop()
         heart_beat_task = loop.create_task(self._send_heart_beat())
 

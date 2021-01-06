@@ -60,7 +60,7 @@ class Voter(State):
             await self._send_response_message(message, yes=False)
             return self, None
 
-        if self.leader is None and "leaderId" in message.data:
+        if "leaderId" in message.data and self.leader != message.data["leaderId"]:
             self.leader = message.data["leaderId"]
             logger.info(f"Accepted new leader: {self.leader}")
 
@@ -68,5 +68,6 @@ class Voter(State):
 
             if not isinstance(self, Follower):
                 follower = Follower()
+                follower.leader = self.leader
                 follower.set_server(self._server)
                 return follower, None
