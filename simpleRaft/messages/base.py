@@ -33,9 +33,6 @@ class BaseMessage:
     def type(self):
         return self._type  # type: ignore
 
-    def __repr__(self):
-        return "[ %d, %s ]" % (self.term, self.data)
-
     def __lt__(self, other):
         return self.timestamp < other.timestamp
 

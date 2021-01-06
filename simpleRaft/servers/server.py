@@ -31,6 +31,11 @@ class Server:
         ...
 
     async def receive_message(self, message):
+        "Use this for the general case"
+        ...
+
+    async def _receive_message(self, message):
+        "Use this for local message delivery"
         ...
 
     async def post_message(self, message):
@@ -41,6 +46,8 @@ class Server:
 
 
 class ZeroMQServer(Server):
+    "This implementation is suitable for single process testing"
+
     def __init__(
         self, name, state: State, log=None, messageBoard=None, neighbors=None, port=0
     ):
@@ -108,14 +115,23 @@ class ZeroMQServer(Server):
         self._neighbors.remove(neighbor)
 
     async def send_message(self, message):
-        for n in self._neighbors:
-            message._receiver = n._name
-            await n.post_message(message)
+        if message.receiver is None:
+            for n in self._neighbors:
+                message._receiver = n._name
+                await n.post_message(message)
+        else:
+            for n in self._neighbors:
+                if n._name == message.receiver:
+                    await n.post_message(message)
+                    break
 
     async def receive_message(self, message):
         n = [n for n in self._neighbors if n._name == message.receiver]
         if len(n) > 0:
             await n[0].post_message(message)
+
+    async def _receive_message(self, message):
+        await self.receive_message(message)
 
     async def post_message(self, message):
         await self._messageBoard.post_message(message)

@@ -27,7 +27,6 @@ class State:
 
         """
         _type = message.type
-        logger.debug(message)
 
         if message.term > self._server._currentTerm:
             self._server._currentTerm = message.term
@@ -77,4 +76,4 @@ class State:
             msg.term,
             {"response": yes, "currentTerm": self._server._currentTerm},
         )
-        await self._server.receive_message(response)
+        await self._server.send_message(response)

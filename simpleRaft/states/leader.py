@@ -10,6 +10,7 @@ class Leader(State):
     def __init__(self):
         self._nextIndexes = defaultdict(int)
         self._matchIndex = defaultdict(int)
+        self.timer = None  # Used by followers/candidates for leader timeout
 
     def set_server(self, server):
         self._server = server
@@ -17,8 +18,11 @@ class Leader(State):
         heart_beat_task = loop.create_task(self._send_heart_beat())
 
         for n in self._server._neighbors:
-            self._nextIndexes[n._name] = self._server._lastLogIndex + 1
-            self._matchIndex[n._name] = 0
+            # With ZeroMQServer we use n.name, but for ZREServer, neighbor is an id
+            if hasattr(n, "_name"):
+                n = n._name
+            self._nextIndexes[n] = self._server._lastLogIndex + 1
+            self._matchIndex[n] = 0
 
         return heart_beat_task
 

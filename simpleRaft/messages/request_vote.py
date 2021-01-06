@@ -13,6 +13,9 @@ class RequestVoteMessage(BaseMessage):
     _type = BaseMessage.MessageType.RequestVote
 
 
+@deserialize
+@serialize
+@dataclass
 class RequestVoteResponseMessage(BaseMessage):
 
     _type = BaseMessage.MessageType.RequestVoteResponse

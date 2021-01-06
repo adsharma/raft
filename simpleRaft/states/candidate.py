@@ -9,6 +9,7 @@ from .voter import Voter
 class Candidate(Voter):
     def __init__(self, timeout=CANDIDATE_TIMEOUT):
         super().__init__(timeout)
+        self.leader = None
 
     def set_server(self, server):
         self._server = server
@@ -24,6 +25,7 @@ class Candidate(Voter):
             self._votes[message.sender] = message
 
             if len(list(self._votes.keys())) > (self._server._total_nodes - 1) / 2:
+                self.timer.cancel()
                 leader = Leader()
                 leader.set_server(self._server)
 

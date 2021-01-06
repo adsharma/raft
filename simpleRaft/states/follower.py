@@ -1,20 +1,18 @@
+import logging
+
 from .config import FOLLOWER_TIMEOUT
 from .voter import Voter
+
+logger = logging.getLogger("raft")
 
 
 class Follower(Voter):
     def __init__(self, timeout=FOLLOWER_TIMEOUT):
         super().__init__(timeout)
+        self.leader = None
 
     async def on_append_entries(self, message):
-        self._timeoutTime = self._nextTimeout()
-        self.timer.cancel()
-        self.timer = self.restart_timer()
-
-        if message.term < self._server._currentTerm:
-            await self._send_response_message(message, yes=False)
-            return self, None
-
+        await super().on_append_entries(message)
         if message.data != {}:
             log = self._server._log
             data = message.data
