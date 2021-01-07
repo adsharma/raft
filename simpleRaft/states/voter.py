@@ -67,6 +67,7 @@ class Voter(State):
             from simpleRaft.states.follower import Follower  # TODO: Fix circular import
 
             if not isinstance(self, Follower):
+                self.timer.cancel()
                 follower = Follower()
                 follower.leader = self.leader
                 follower.set_server(self._server)
