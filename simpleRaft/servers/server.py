@@ -1,26 +1,37 @@
 import asyncio
 import logging
+from dataclasses import dataclass
+from typing import List, Optional
 
 import zmq
 import zmq.asyncio
 
-from ..boards.memory_board import MemoryBoard
+from ..boards.memory_board import Board, MemoryBoard
 from ..states.state import State
 
 
+@dataclass
 class Server:
-    def __init__(self, name, state, log, messageBoard, neighbors):
-        self._name = name
-        self._state = state
-        self._log = log
-        self._messageBoard = messageBoard
-        self._neighbors = neighbors
+    _name: str
+    _state: State
+    _log: List
+    _messageBoard: Board
+    _neighbors: List
+
+    # Internal state
+    _commitIndex: int = 0
+    _currentTerm: int = 0
+    _lastApplied: int = 0
+    _lastLogIndex: int = 0
+    _lastLogTerm: Optional[int] = None
+
+    def __post_init__(self):
         self._clear()
         self._state.set_server(self)
         self._messageBoard.set_owner(self)
 
     def _clear(self):
-        self._total_nodes = 0
+        self._total_nodes = len(self._neighbors)
         self._commitIndex = 0
         self._currentTerm = 0
         self._lastApplied = 0
