@@ -4,7 +4,7 @@ import asyncio
 import unittest
 
 from simpleRaft.boards.memory_board import MemoryBoard
-from simpleRaft.messages.append_entries import AppendEntriesMessage
+from simpleRaft.messages.append_entries import AppendEntriesMessage, LogEntry
 from simpleRaft.messages.request_vote import RequestVoteMessage
 from simpleRaft.servers.server import ZeroMQServer as Server
 from simpleRaft.states.follower import Follower
@@ -37,7 +37,7 @@ class TestFollowerServer(unittest.IsolatedAsyncioTestCase):
         await self.server.on_message(msg)
 
         msg = await self.oserver._messageBoard.get_message()
-        self.assertEqual(False, msg.data["response"])
+        self.assertEqual(False, msg.response)
 
     async def test_follower_server_on_receive_message_with_greater_term(self):
 
@@ -50,50 +50,45 @@ class TestFollowerServer(unittest.IsolatedAsyncioTestCase):
     async def test_follower_server_on_receive_message_where_log_does_not_have_prevLogTerm(
         self
     ):
-        self.server._log.append({"term": 100, "value": 2000})
+        self.server._log.append(LogEntry(term=100, value=2000))
         msg = AppendEntriesMessage(
             0,
             1,
             2,
-            {
-                "prevLogIndex": 0,
-                "prevLogTerm": 1,
-                "leaderCommit": 1,
-                "entries": [{"term": 1, "value": 100}],
-            },
+            prev_log_index=0,
+            prev_log_term=1,
+            leader_commit=1,
+            entries=[LogEntry(term=1, value=100)],
         )
 
         await self.server.on_message(msg)
 
         msg = await self.oserver._messageBoard.get_message()
-        self.assertEqual(False, msg.data["response"])
+        self.assertEqual(False, msg.response)
         self.assertEqual([], self.server._log)
 
     async def test_follower_server_on_receive_message_where_log_contains_conflicting_entry_at_new_index(
         self
     ):
 
-        self.server._log.append({"term": 1, "value": 0})
-        self.server._log.append({"term": 1, "value": 200})
-        self.server._log.append({"term": 1, "value": 300})
-        self.server._log.append({"term": 2, "value": 400})
+        self.server._log.append(LogEntry(term=1, value=0))
+        self.server._log.append(LogEntry(term=1, value=200))
+        self.server._log.append(LogEntry(term=1, value=300))
+        self.server._log.append(LogEntry(term=1, value=400))
 
         msg = AppendEntriesMessage(
             0,
             1,
             2,
-            {
-                "prevLogIndex": 0,
-                "prevLogTerm": 1,
-                "leaderCommit": 1,
-                "entries": [{"term": 1, "value": 100}],
-            },
+            prev_log_index=0,
+            prev_log_term=1,
+            leader_commit=1,
+            entries=[LogEntry(term=1, value=100)],
         )
 
         await self.server.on_message(msg)
-        self.assertEqual({"term": 1, "value": 100}, self.server._log[1])
         self.assertEqual(
-            [{"term": 1, "value": 0}, {"term": 1, "value": 100}], self.server._log
+            [LogEntry(term=1, value=0), LogEntry(term=1, value=100)], self.server._log
         )
 
     async def test_follower_server_on_receive_message_where_log_is_empty_and_receives_its_first_value(
@@ -104,32 +99,26 @@ class TestFollowerServer(unittest.IsolatedAsyncioTestCase):
             0,
             1,
             2,
-            {
-                "prevLogIndex": 0,
-                "prevLogTerm": 100,
-                "leaderCommit": 1,
-                "entries": [{"term": 1, "value": 100}],
-            },
+            prev_log_index=0,
+            prev_log_term=100,
+            leader_commit=1,
+            entries=[LogEntry(term=1, value=100)],
         )
 
         await self.server.on_message(msg)
-        self.assertEqual({"term": 1, "value": 100}, self.server._log[0])
+        self.assertEqual(LogEntry(term=1, value=100), self.server._log[0])
 
     async def test_follower_server_on_receive_vote_request_message(self):
-        msg = RequestVoteMessage(
-            0, 1, 2, {"lastLogIndex": 0, "lastLogTerm": 0, "entries": []}
-        )
+        msg = RequestVoteMessage(0, 1, 2)
 
         await self.server.on_message(msg)
 
         self.assertEqual(0, self.server._state._last_vote)
         msg = await self.oserver._messageBoard.get_message()
-        self.assertEqual(True, msg.data["response"])
+        self.assertEqual(True, msg.response)
 
     async def test_follower_server_on_receive_vote_request_after_sending_a_vote(self):
-        msg = RequestVoteMessage(
-            0, 1, 2, {"lastLogIndex": 0, "lastLogTerm": 0, "entries": []}
-        )
+        msg = RequestVoteMessage(0, 1, 2)
 
         await self.server.on_message(msg)
 

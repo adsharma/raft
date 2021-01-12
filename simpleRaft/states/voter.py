@@ -22,7 +22,7 @@ class Voter(State):
     async def on_vote_request(self, message):
         if (
             self._last_vote is None
-            and message.data["lastLogIndex"] >= self._server._lastLogIndex
+            and message.last_log_index >= self._server._lastLogIndex
         ):
             self._last_vote = message.sender
             await self._send_vote_response_message(message)
@@ -33,7 +33,7 @@ class Voter(State):
 
     async def _send_vote_response_message(self, msg, yes=True):
         voteResponse = RequestVoteResponseMessage(
-            self._server._name, msg.sender, msg.term, {"response": yes}
+            self._server._name, msg.sender, msg.term, response=yes
         )
         await self._server.send_message(voteResponse)
 
@@ -60,11 +60,12 @@ class Voter(State):
             await self._send_response_message(message, yes=False)
             return self, None
 
-        if "leaderId" in message.data and self.leader != message.data["leaderId"]:
-            self.leader = message.data["leaderId"]
+        if self.leader != message.leader_id:
+            self.leader = message.leader_id
             logger.info(f"Accepted new leader: {self.leader}")
 
-            from simpleRaft.states.follower import Follower  # TODO: Fix circular import
+            from simpleRaft.states.follower import \
+                Follower  # TODO: Fix circular import
 
             if not isinstance(self, Follower):
                 self.timer.cancel()

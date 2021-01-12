@@ -3,7 +3,7 @@
 import unittest
 import uuid
 
-from simpleRaft.messages.append_entries import AppendEntriesMessage
+from simpleRaft.messages.append_entries import AppendEntriesMessage, LogEntry
 from simpleRaft.servers.server import ZeroMQServer
 from simpleRaft.states.candidate import Candidate
 from simpleRaft.states.follower import Follower
@@ -66,15 +66,7 @@ class TestRaft(unittest.IsolatedAsyncioTestCase):
         await self._perform_heart_beat()
 
         msg = AppendEntriesMessage(
-            0,
-            None,
-            1,
-            {
-                "prevLogIndex": 0,
-                "prevLogTerm": 0,
-                "leaderCommit": 1,
-                "entries": [{"term": 1, "value": 100}],
-            },
+            0, None, 1, leader_commit=1, entries=[LogEntry(term=1, value=100)]
         )
 
         await self.leader.send_message(msg)
@@ -83,26 +75,18 @@ class TestRaft(unittest.IsolatedAsyncioTestCase):
             await i.on_message(await i._messageBoard.get_message())
 
         for i in self.leader._neighbors:
-            self.assertEqual([{"term": 1, "value": 100}], i._log)
+            self.assertEqual([LogEntry(term=1, value=100)], i._log)
 
     async def test_dirty(self):
-        self.leader._neighbors[0]._log.append({"term": 2, "value": 100})
-        self.leader._neighbors[0]._log.append({"term": 2, "value": 200})
-        self.leader._neighbors[1]._log.append({"term": 3, "value": 200})
-        self.leader._log.append({"term": 1, "value": 100})
+        self.leader._neighbors[0]._log.append(LogEntry(term=2, value=100))
+        self.leader._neighbors[0]._log.append(LogEntry(term=2, value=200))
+        self.leader._neighbors[1]._log.append(LogEntry(term=3, value=200))
+        self.leader._log.append(LogEntry(term=1, value=100))
 
         await self._perform_heart_beat()
 
         msg = AppendEntriesMessage(
-            0,
-            None,
-            1,
-            {
-                "prevLogIndex": 0,
-                "prevLogTerm": 0,
-                "leaderCommit": 1,
-                "entries": [{"term": 1, "value": 100}],
-            },
+            0, None, 1, leader_commit=1, entries=[LogEntry(term=1, value=100)]
         )
 
         await self.leader.send_message(msg)
@@ -111,7 +95,7 @@ class TestRaft(unittest.IsolatedAsyncioTestCase):
             await i.on_message(await i._messageBoard.get_message())
 
         for i in self.leader._neighbors:
-            self.assertEqual([{"term": 1, "value": 100}], i._log)
+            self.assertEqual([LogEntry(term=1, value=100)], i._log)
 
 
 if __name__ == "__main__":

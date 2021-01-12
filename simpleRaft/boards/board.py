@@ -1,4 +1,13 @@
+from asyncio import Queue
+from dataclasses import dataclass
+from typing import Optional
+
+
+@dataclass
 class Board:
+    _owner: Optional[str] = None
+    _board: Optional[Queue] = None
+
     def set_owner(self, owner):
         self._owner = owner
 

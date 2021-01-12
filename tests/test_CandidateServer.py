@@ -30,17 +30,13 @@ class TestCandidateServer(unittest.IsolatedAsyncioTestCase):
         await self.oserver.on_message(await self.oserver._messageBoard.get_message())
 
         self.assertEqual(1, len(self.server._messageBoard._board._queue))
-        self.assertEqual(
-            True, (await self.server._messageBoard.get_message()).data["response"]
-        )
+        self.assertEqual(True, (await self.server._messageBoard.get_message()).response)
 
     async def test_candidate_server_had_gotten_the_vote(self):
         await self.oserver.on_message(await self.oserver._messageBoard.get_message())
 
         self.assertEqual(1, len(self.server._messageBoard._board._queue))
-        self.assertEqual(
-            True, (await self.server._messageBoard.get_message()).data["response"]
-        )
+        self.assertEqual(True, (await self.server._messageBoard.get_message()).response)
 
     async def test_candidate_server_wins_election(self):
         server0 = Server(0, Follower())

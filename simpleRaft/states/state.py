@@ -80,6 +80,7 @@ class State:
             self._server._name,
             msg.sender,
             msg.term,
-            {"response": yes, "currentTerm": self._server._currentTerm},
+            response=yes,
+            current_term=self._server._currentTerm,
         )
         await self._server.send_message(response)

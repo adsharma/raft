@@ -11,6 +11,8 @@ from .base import BaseMessage
 class RequestVoteMessage(BaseMessage):
 
     _type = BaseMessage.MessageType.RequestVote
+    last_log_index: int = 0
+    last_log_term: int = 0
 
 
 @deserialize
@@ -19,3 +21,6 @@ class RequestVoteMessage(BaseMessage):
 class RequestVoteResponseMessage(BaseMessage):
 
     _type = BaseMessage.MessageType.RequestVoteResponse
+
+    response: bool = True
+    current_term: int = 0

@@ -38,10 +38,8 @@ class Candidate(Voter):
             self._server._name,
             None,
             self._server._currentTerm,
-            {
-                "lastLogIndex": self._server._lastLogIndex,
-                "lastLogTerm": self._server._lastLogTerm,
-            },
+            last_log_index=self._server._lastLogIndex,
+            last_log_term=self._server._lastLogTerm,
         )
 
         await self._server.send_message(election)

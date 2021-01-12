@@ -8,6 +8,7 @@ from .state import State
 
 logger = logging.getLogger("raft")
 
+
 class Leader(State):
     def __init__(self):
         self._nextIndexes = defaultdict(int)
@@ -31,7 +32,7 @@ class Leader(State):
 
     async def on_response_received(self, message):
         # Was the last AppendEntries good?
-        if not message.data["response"]:
+        if not message.response:
             # No, so lets back up the log for this node
             self._nextIndexes[message.sender] -= 1
 
@@ -45,13 +46,11 @@ class Leader(State):
                 self._server._name,
                 message.sender,
                 self._server._currentTerm,
-                {
-                    "leaderId": self._server._name,
-                    "prevLogIndex": previousIndex,
-                    "prevLogTerm": previous["term"],
-                    "entries": [current],
-                    "leaderCommit": self._server._commitIndex,
-                },
+                leader_id=self._server._name,
+                prev_log_index=previousIndex,
+                prev_log_term=previous.term,
+                entries=[current],
+                leader_commit=self._server._commitIndex,
             )
 
             await self._send_response_message(appendEntry)
@@ -70,13 +69,11 @@ class Leader(State):
             self._server._name,
             None,
             self._server._currentTerm,
-            {
-                "leaderId": self._server._name,
-                "prevLogIndex": self._server._lastLogIndex,
-                "prevLogTerm": self._server._lastLogTerm,
-                "entries": [],
-                "leaderCommit": self._server._commitIndex,
-            },
+            leader_id=self._server._name,
+            prev_log_index=self._server._lastLogIndex,
+            prev_log_term=self._server._lastLogTerm,
+            entries=[],
+            leader_commit=self._server._commitIndex,
         )
         await self._server.send_message(message)
 

@@ -19,10 +19,10 @@ class BaseMessage:
 
     EXT_DICT = {}
 
-    sender: Union[int, uuid.UUID]  # int used only on tests
+    sender: Union[int, str, uuid.UUID]  # int used only on tests
     receiver: Union[int, uuid.UUID, None]
     term: int
-    data: Union[int, str, Dict]
+    data: Union[int, str, Dict, None] = None
     timestamp: int = int(time.time())
 
     def __init_subclass__(cls, **kwargs):

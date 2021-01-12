@@ -1,11 +1,12 @@
 import asyncio
+from dataclasses import dataclass
 
 from .board import Board
 
 
+@dataclass
 class MemoryBoard(Board):
-    def __init__(self):
-        Board.__init__(self)
+    def __post_init__(self):
         self._board = asyncio.PriorityQueue()
 
     async def post_message(self, message):
