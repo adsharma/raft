@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from enum import IntEnum
 from typing import List, Optional, Union
 
 from serde import deserialize, serialize
@@ -19,10 +20,17 @@ class AppendEntriesMessage(BaseMessage):
     leader_commit: int = 0
 
 
+class Command(IntEnum):
+    PUT = 0
+    GET = 1
+
+
 @deserialize
 @serialize
 @dataclass
 class LogEntry:
     term: int
+    index: int = 0
+    command: Command = Command.PUT
     key: Union[int, str, None] = None
     value: Union[int, str, None] = None

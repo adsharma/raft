@@ -3,6 +3,7 @@
 import unittest
 import uuid
 
+from simpleRaft.boards.db_board import DBBoard
 from simpleRaft.messages.append_entries import AppendEntriesMessage, LogEntry
 from simpleRaft.servers.server import ZeroMQServer
 from simpleRaft.states.candidate import Candidate
@@ -17,7 +18,12 @@ class TestRaft(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUpClass(cls):
         cls.servers = []
         for i in range(N):
-            s = ZeroMQServer("S%d" % i, Follower(), port=6666 + i)
+            s = ZeroMQServer(
+                f"S{i}",
+                Follower(),
+                port=6666 + i,
+                messageBoard=DBBoard(prefix=f"/tmp/DB{i}"),
+            )
             cls.servers.append(s)
         for i in range(N):
             me = cls.servers[i]
@@ -45,7 +51,7 @@ class TestRaft(unittest.IsolatedAsyncioTestCase):
         await self.asyncSetUpClass()
         for i in range(N):
             self.servers[i]._state.__init__()
-            self.servers[i]._messageBoard.__init__()
+            self.servers[i]._messageBoard.clear()
             self.servers[i]._log.clear()
             self.servers[i]._clear()
 

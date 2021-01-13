@@ -20,7 +20,7 @@ class BaseMessage:
     EXT_DICT = {}
 
     sender: Union[int, str, uuid.UUID]  # int used only on tests
-    receiver: Union[int, uuid.UUID, None]
+    receiver: Union[int, str, uuid.UUID, None]
     term: int
     data: Union[int, str, Dict, None] = None
     timestamp: int = int(time.time())

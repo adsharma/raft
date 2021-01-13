@@ -44,6 +44,8 @@ class State:
             return await self.on_vote_received(message)
         elif _type == BaseMessage.MessageType.Response:
             return await self.on_response_received(message)
+        else:
+            raise Exception(f"Unknown message type: {type(message)}")
 
     async def on_leader_timeout(self, message):
         """This is called when the leader timeout is reached."""

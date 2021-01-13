@@ -9,6 +9,9 @@ class MemoryBoard(Board):
     def __post_init__(self):
         self._board = asyncio.PriorityQueue()
 
+    def clear(self):
+        self._board = asyncio.PriorityQueue()
+
     async def post_message(self, message):
         self._board.put_nowait((message.timestamp, message))
 

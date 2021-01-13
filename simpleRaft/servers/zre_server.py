@@ -43,8 +43,10 @@ class ZREServer(Server):
             if message.receiver is None:
                 self._node.shout(self.ZRE_GROUP, b"/raft " + message_bytes)
             else:
+                if type(message.receiver) != str:
+                    raise Exception(f"Expected node.uuid().hex here, got: {message.receiver}")
                 self._node.whisper(
-                    uuid.UUID(message.receiver), b"/raft " + message_bytes
+                    uuid.UUID(message.receiver), b"/raft " + message_bytes  # type: ignore
                 )
 
     async def receive_message(self, message_bytes: bytes):
