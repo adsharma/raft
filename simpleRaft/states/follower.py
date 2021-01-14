@@ -20,7 +20,9 @@ class Follower(Voter):
             if message.leader_commit != self._server._commitIndex:
                 # If the leader is too far ahead then we
                 #   use the length of the log - 1
-                self._server._commitIndex = min(message.leader_commit, len(log) - 1)
+                self._server._commitIndex = min(
+                    message.leader_commit, max(0, len(log) - 1)
+                )
 
             # Can't possibly be up-to-date with the log
             # If the log is smaller than the preLogIndex
@@ -67,7 +69,7 @@ class Follower(Voter):
                     await self._send_response_message(message)
                     self._server._lastLogIndex = len(log) - 1
                     self._server._lastLogTerm = log[-1].term
-                    self._commitIndex = len(log) - 1
+                    self._commitIndex = max(0, len(log) - 1)
                     self._server._log = log
                 else:
                     # The commit index is not out of the range of the log
@@ -81,7 +83,7 @@ class Follower(Voter):
 
                         self._server._lastLogIndex = len(log) - 1
                         self._server._lastLogTerm = log[-1].term
-                        self._commitIndex = len(log) - 1
+                        self._commitIndex = max(0, len(log) - 1)
                         self._server._log = log
                         await self._send_response_message(message)
 

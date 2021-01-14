@@ -31,6 +31,13 @@ class Leader(State):
 
         return heart_beat_task
 
+    async def on_append_entries(self, message: AppendEntriesMessage):
+        for entry in message.entries:
+            self._server._log.append(entry)
+            entry.term = self._server._currentTerm
+            entry.index = self._server._commitIndex
+        return self, None
+
     async def on_response_received(self, message):
         # Was the last AppendEntries good?
         if not message.response:

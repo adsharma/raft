@@ -104,6 +104,7 @@ class ZREServer(Server):
                 entries=[
                     LogEntry(
                         term=self._currentTerm,
+                        index=self._commitIndex,
                         key=key,
                         value=value,
                     )
