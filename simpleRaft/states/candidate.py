@@ -42,5 +42,7 @@ class Candidate(Voter):
             last_log_term=self._server._lastLogTerm,
         )
 
+        # Vote for self
+        await self._send_response_message(election)
         await self._server.send_message(election)
         self._last_vote = self._server._name
