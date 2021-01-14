@@ -60,7 +60,6 @@ class Follower(Voter):
                     log.append(e)
                     self._server._commitIndex += 1
 
-                await self._send_response_message(message)
                 self._server._lastLogIndex = len(log) - 1
                 self._server._lastLogTerm = log[-1].term
                 self._commitIndex = max(0, len(log) - 1)
@@ -79,7 +78,6 @@ class Follower(Voter):
                     self._server._lastLogTerm = log[-1].term
                     self._commitIndex = max(0, len(log) - 1)
                     self._server._log = log
-                    await self._send_response_message(message)
 
         await self._send_response_message(message)
         return self, None
