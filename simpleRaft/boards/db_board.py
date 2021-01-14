@@ -39,6 +39,7 @@ class DBBoard(Board):
             if entry.command == Command.PUT and entry.key is not None:
                 self._kv[entry.key] = entry.value
         self._db.sync()
+        self._kv.sync()
 
     async def get_message(self) -> Optional[LogEntry]:
         try:

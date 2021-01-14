@@ -40,6 +40,14 @@ class ZREServer(Server):
         if isinstance(message, bytes):
             self._node.shout(self.ZRE_GROUP, b"/raft " + message)
         else:
+            if message.receiver == self._name:
+                await self._receive_message(message)
+                return
+
+            # Temporary workaround till we resolve the nested msgpack/dataclass issue
+            if isinstance(message, AppendEntriesMessage):
+                message.entries = [to_msgpack(e) for e in message.entries]
+
             message_bytes = to_msgpack(message, ext_dict=BaseMessage.EXT_DICT)
             if message.receiver is None:
                 self._node.shout(self.ZRE_GROUP, b"/raft " + message_bytes)
@@ -58,6 +66,13 @@ class ZREServer(Server):
             message = from_msgpack(
                 BaseMessage, message_bytes, ext_dict=BaseMessage.EXT_DICT
             )
+            # Temporary workaround till we resolve the nested msgpack/dataclass issue
+            if isinstance(message, AppendEntriesMessage):
+                message.entries = [
+                    from_msgpack(LogEntry, encoded_bytes)
+                    for encoded_bytes in message.entries
+                ]
+
         except Exception as e:
             logger.info(f"Got exception: {e}")
             return
@@ -86,7 +101,13 @@ class ZREServer(Server):
                 self._name,
                 leader,
                 self._currentTerm,
-                entries=[LogEntry(term=self._currentTerm, key=key, value=value)],
+                entries=[
+                    LogEntry(
+                        term=self._currentTerm,
+                        key=key,
+                        value=value,
+                    )
+                ],
             )
             await self.send_message(append_entries)
             # TODO: wait for the leader to respond
