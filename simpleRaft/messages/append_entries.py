@@ -21,7 +21,7 @@ class AppendEntriesMessage(BaseMessage):
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
-        cls.EXT_DICT[LogEntry._type] = LogEntry # type: ignore
+        BaseMessage.EXT_DICT[LogEntry._type] = LogEntry # type: ignore
 
 
 class Command(IntEnum):

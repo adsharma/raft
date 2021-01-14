@@ -14,10 +14,10 @@ class Leader(State):
         self._nextIndexes = defaultdict(int)
         self._matchIndex = defaultdict(int)
         self.timer = None  # Used by followers/candidates for leader timeout
-        self.leader = self
 
     def set_server(self, server):
         self._server = server
+        self.leader = self._server._name
         logger.info(f"{self._server._name}: New Leader")
         loop = asyncio.get_event_loop()
         heart_beat_task = loop.create_task(self._send_heart_beat())
