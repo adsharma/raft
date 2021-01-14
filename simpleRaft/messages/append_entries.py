@@ -19,6 +19,10 @@ class AppendEntriesMessage(BaseMessage):
     entries: List = field(default_factory=list)
     leader_commit: int = 0
 
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        cls.EXT_DICT[LogEntry._type] = LogEntry # type: ignore
+
 
 class Command(IntEnum):
     PUT = 0
@@ -29,6 +33,8 @@ class Command(IntEnum):
 @serialize
 @dataclass
 class LogEntry:
+    _type = BaseMessage.MessageType.LogEntry
+
     term: int
     index: int = 0
     command: Command = Command.PUT

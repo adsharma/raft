@@ -14,6 +14,7 @@ class Leader(State):
         self._nextIndexes = defaultdict(int)
         self._matchIndex = defaultdict(int)
         self.timer = None  # Used by followers/candidates for leader timeout
+        self.leader = self
 
     def set_server(self, server):
         self._server = server

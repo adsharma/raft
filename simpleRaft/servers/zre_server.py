@@ -7,6 +7,7 @@ from serde.msgpack import from_msgpack, to_msgpack
 
 from ..boards.memory_board import MemoryBoard
 from ..messages.base import BaseMessage
+from ..messages.append_entries import AppendEntriesMessage, LogEntry
 from ..states.state import State
 from .server import Server
 
@@ -44,9 +45,12 @@ class ZREServer(Server):
                 self._node.shout(self.ZRE_GROUP, b"/raft " + message_bytes)
             else:
                 if type(message.receiver) != str:
-                    raise Exception(f"Expected node.uuid().hex here, got: {message.receiver}")
+                    raise Exception(
+                        f"Expected node.uuid().hex here, got: {message.receiver}"
+                    )
                 self._node.whisper(
-                    uuid.UUID(message.receiver), b"/raft " + message_bytes  # type: ignore
+                    uuid.UUID(message.receiver),  # type: ignore
+                    b"/raft " + message_bytes,
                 )
 
     async def receive_message(self, message_bytes: bytes):
@@ -74,3 +78,20 @@ class ZREServer(Server):
         logger.debug(f"---------- on_message end -----------")
 
         self._state = state
+
+    async def set(self, key: str, value: str) -> None:
+        leader = self._state.leader
+        if leader is not None:
+            append_entries = AppendEntriesMessage(
+                self._name,
+                leader,
+                self._currentTerm,
+                entries=[LogEntry(term=self._currentTerm, key=key, value=value)],
+            )
+            await self.send_message(append_entries)
+            # TODO: wait for the leader to respond
+        else:
+            raise Exception("Leader not found")
+
+    async def get(self, key: str):
+        return await self._messageBoard.get(key)

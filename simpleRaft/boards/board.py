@@ -20,3 +20,8 @@ class Board:
         Boards act like queues, and allow multiple clients
         to write to them.
         """
+
+    async def get(self, key: str) -> Optional[str]:
+        """Get value from the key value store. Not all boards
+        implement this.
+        """

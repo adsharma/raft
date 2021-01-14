@@ -1,5 +1,6 @@
 import asyncio
 from dataclasses import dataclass
+from typing import Optional
 
 from .board import Board
 
@@ -20,3 +21,6 @@ class MemoryBoard(Board):
             return (await self._board.get())[1]
         except IndexError:
             return None
+
+    async def get(self, key: str) -> Optional[str]:
+        raise Exception("Not implemented")

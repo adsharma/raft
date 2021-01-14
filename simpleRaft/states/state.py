@@ -16,6 +16,7 @@ logger = logging.getLogger("raft")
 class State:
     def __init__(self, timeout):
         self._timeout = timeout
+        self.leader = None
 
     def set_server(self, server: "Server"):
         self._server = server

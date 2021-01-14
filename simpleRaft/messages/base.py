@@ -16,6 +16,7 @@ class BaseMessage:
         RequestVote = 1
         RequestVoteResponse = 2
         Response = 3
+        LogEntry = 4
 
     EXT_DICT = {}
 
