@@ -3,7 +3,7 @@ import logging
 from collections import defaultdict
 
 from ..messages.append_entries import AppendEntriesMessage
-from .config import HEART_BEAT_INTERVAL
+from .config import HEART_BEAT_INTERVAL, SEND_ENTRIES_INTERVAL
 from .state import State
 
 logger = logging.getLogger("raft")
@@ -14,6 +14,7 @@ class Leader(State):
         self._nextIndexes = defaultdict(int)
         self._matchIndex = defaultdict(int)
         self.timer = None  # Used by followers/candidates for leader timeout
+        asyncio.create_task(self.append_entries_loop())
 
     def set_server(self, server):
         self._server = server
@@ -90,3 +91,29 @@ class Leader(State):
             await self._send_heart_beat()
 
         asyncio.create_task(schedule_another_beat())
+
+    async def _send_entries(self, peer, num: int):
+        logger.info(f"{self._server._name}: sending {num} entries")
+        message = AppendEntriesMessage(
+            self._server._name,
+            peer,
+            self._server._currentTerm,
+            leader_id=self._server._name,
+            prev_log_index=self._server._lastLogIndex,
+            prev_log_term=self._server._lastLogTerm,
+            entries=[self._server._log[-num:]],
+            leader_commit=self._server._commitIndex,
+        )
+        await self._server.send_message(message)
+
+    async def append_entries_loop(self):
+        for n in self._server._neighbors:
+            # With ZeroMQServer we use n.name, but for ZREServer, neighbor is an id
+            if hasattr(n, "_name"):
+                n = n._name
+            last_log_index = self._server._lastLogIndex
+            if self._nextIndexes[n] < last_log_index:
+                num = last_log_index - self._nextIndexes[n]
+                await self._send_entries(n, num)
+
+        await asyncio.sleep(SEND_ENTRIES_INTERVAL)
