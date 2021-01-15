@@ -27,6 +27,12 @@ class Follower(Voter):
             await self._send_response_message(message, yes=False)
             return self, None
 
+        #   Is this a heartbeat?
+        if len(message.entries) == 0:
+            await self._send_response_message(message)
+            return self, None
+
+        response = True
         # We need to hold the induction proof of the algorithm here.
         #   So, we make sure that the prevLogIndex term is always
         #   equal to the server.
@@ -35,12 +41,10 @@ class Follower(Voter):
             # There is a conflict we need to resync so delete everything
             #   from this prevLogIndex and forward and send a failure
             #   to the server.
-            log = log[: message.prev_log_index]
-            await self._send_response_message(message, yes=False)
-            self._server._log = log
+            self._server._log = log = log[: message.prev_log_index]
+            response = False
             self._server._lastLogIndex = message.prev_log_index
             self._server._lastLogTerm = message.prev_log_term
-            return self, None
         # The induction proof held so lets check if the commitIndex
         #   value is the same as the one on the leader
         else:
@@ -55,29 +59,16 @@ class Follower(Voter):
                 #   by taking the current log and slicing it to the
                 #   leaderCommit + 1 range then setting the last
                 #   value to the commitValue
-                log = log[: self._server._commitIndex]
-                for e in message.entries:
-                    log.append(e)
-                    self._server._commitIndex += 1
+                self._server._log = log = log[: self._server._commitIndex]
 
-                self._server._lastLogIndex = len(log) - 1
-                self._server._lastLogTerm = log[-1].term
-                self._commitIndex = max(0, len(log) - 1)
-                self._server._log = log
-            else:
-                # The commit index is not out of the range of the log
-                #   so we can just append it to the log now.
-                #   commitIndex = len(log)
-                #   Is this a heartbeat?
-                if len(message.entries) > 0:
-                    for e in message.entries:
-                        log.append(e)
-                        self._server._commitIndex += 1
+        # Apply the log entries
+        for e in message.entries:
+            log.append(e)
+            self._server._commitIndex += 1
 
-                    self._server._lastLogIndex = len(log) - 1
-                    self._server._lastLogTerm = log[-1].term
-                    self._commitIndex = max(0, len(log) - 1)
-                    self._server._log = log
+        self._server._lastLogIndex = len(log) - 1
+        self._server._lastLogTerm = log[-1].term
+        self._commitIndex = max(0, len(log) - 1)
 
-        await self._send_response_message(message)
+        await self._send_response_message(message, yes=response)
         return self, None

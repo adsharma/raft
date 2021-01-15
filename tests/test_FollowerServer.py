@@ -65,7 +65,7 @@ class TestFollowerServer(unittest.IsolatedAsyncioTestCase):
 
         msg = await self.oserver._messageBoard.get_message()
         self.assertEqual(False, msg.response)
-        self.assertEqual([], self.server._log)
+        self.assertEqual([LogEntry(term=1, value=100)], self.server._log)
 
     async def test_follower_server_on_receive_message_where_log_contains_conflicting_entry_at_new_index(
         self
