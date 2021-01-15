@@ -35,15 +35,16 @@ class Leader(State):
     async def on_append_entries(self, message: AppendEntriesMessage):
         for entry in message.entries:
             self._server._log.append(entry)
+            self._server._lastLogIndex = len(self._server._log) - 1
             entry.term = self._server._currentTerm
-            entry.index = self._server._commitIndex
+            entry.index = self._server._lastLogIndex
         return self, None
 
     async def on_response_received(self, message):
         # Was the last AppendEntries good?
         if not message.response:
             # No, so lets back up the log for this node
-            self._nextIndexes[message.sender] -= 1
+            self._nextIndexes[message.sender] = max(0, self._nextIndexes[message.sender] - 1)
 
             # Get the next log entry to send to the client.
             previousIndex = max(0, self._nextIndexes[message.sender] - 1)
@@ -62,7 +63,7 @@ class Leader(State):
                 leader_commit=self._server._commitIndex,
             )
 
-            await self._send_response_message(appendEntry)
+            await self._server.send_message(appendEntry)
         else:
             # The last append was good so increase their index.
             self._nextIndexes[message.sender] += 1
