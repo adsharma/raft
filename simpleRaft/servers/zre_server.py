@@ -21,7 +21,7 @@ class ZREServer(Server):
 
     def __init__(self, name, state: State, node: Pyre, log=None, messageBoard=None):
         if log == None:
-            log = []
+            log = [LogEntry(term=0)]  # According to the raft spec
         if messageBoard == None:
             messageBoard = MemoryBoard()
 
