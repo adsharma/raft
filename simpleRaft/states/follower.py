@@ -23,7 +23,7 @@ class Follower(Voter):
 
         # Can't possibly be up-to-date with the log
         # If the log is smaller than the preLogIndex
-        if len(log) < message.prev_log_index:
+        if len(log) <= message.prev_log_index:
             await self._send_response_message(message, yes=False)
             return self, None
 
@@ -53,6 +53,7 @@ class Follower(Voter):
             if (
                 len(log) > 0
                 and message.leader_commit > 0
+                and message.leader_commit < len(log)
                 and log[message.leader_commit].term != message.term
             ):
                 # Data was found to be different so we fix that

@@ -71,24 +71,24 @@ class TestFollowerServer(unittest.IsolatedAsyncioTestCase):
         self
     ):
 
-        self.server._log.append(LogEntry(term=1, value=0))
-        self.server._log.append(LogEntry(term=1, value=200))
-        self.server._log.append(LogEntry(term=1, value=300))
-        self.server._log.append(LogEntry(term=1, value=400))
+        self.server._log.append(LogEntry(term=1, index=1, value=0))
+        self.server._log.append(LogEntry(term=1, index=2, value=200))
+        self.server._log.append(LogEntry(term=1, index=3, value=300))
+        self.server._log.append(LogEntry(term=1, index=4, value=400))
 
         msg = AppendEntriesMessage(
             0,
             1,
             2,
-            prev_log_index=0,
+            prev_log_index=1,
             prev_log_term=1,
             leader_commit=1,
-            entries=[LogEntry(term=1, value=100)],
+            entries=[LogEntry(term=1, index=1, value=100)],
         )
 
         await self.server.on_message(msg)
         self.assertEqual(
-            [LogEntry(term=1, value=0), LogEntry(term=1, value=100)], self.server._log
+            [LogEntry(term=0), LogEntry(term=1, index=1, value=100)], self.server._log
         )
 
     async def test_follower_server_on_receive_message_where_log_is_empty_and_receives_its_first_value(

@@ -43,7 +43,7 @@ class TestLeaderServer(unittest.IsolatedAsyncioTestCase):
     async def test_leader_server_sends_heartbeat_to_all_neighbors(self):
 
         await self._perform_heart_beat()
-        self.assertEqual({1: 1, 2: 1, 3: 1}, self.leader._state._nextIndexes)
+        self.assertEqual({1: 0, 2: 0, 3: 0}, self.leader._state._nextIndexes)
 
     async def test_leader_server_sends_appendentries_to_all_neighbors_and_is_appended_to_their_logs(
         self
@@ -61,21 +61,21 @@ class TestLeaderServer(unittest.IsolatedAsyncioTestCase):
             await i.on_message(await i._messageBoard.get_message())
 
         for i in self.leader._neighbors:
-            self.assertEqual([LogEntry(term=1, value=100)], i._log)
+            self.assertEqual([LogEntry(term=0), LogEntry(term=1, value=100)], i._log)
 
     async def test_leader_server_sends_appendentries_to_all_neighbors_but_some_have_dirtied_logs(
         self
     ):
 
-        self.leader._neighbors[0]._log.append(LogEntry(term=1, value=100))
-        self.leader._neighbors[0]._log.append(LogEntry(term=2, value=200))
-        self.leader._neighbors[0]._log.append(LogEntry(term=3, value=200))
-        self.leader._log.append(LogEntry(term=1, value=100))
+        self.leader._neighbors[0]._log.append(LogEntry(term=1, index=1, value=100))
+        self.leader._neighbors[0]._log.append(LogEntry(term=2, index=0, value=200))
+        self.leader._neighbors[0]._log.append(LogEntry(term=3, index=0, value=200))
+        self.leader._log.append(LogEntry(term=1, index=1, value=100))
 
         await self._perform_heart_beat()
 
         msg = AppendEntriesMessage(
-            0, None, 1, leader_commit=1, entries=[LogEntry(term=1, value=100)]
+            0, None, 2, leader_commit=1, entries=[LogEntry(term=1, value=100)]
         )
 
         await self.leader.send_message(msg)
@@ -84,7 +84,7 @@ class TestLeaderServer(unittest.IsolatedAsyncioTestCase):
             await i.on_message(await i._messageBoard.get_message())
 
         for i in self.leader._neighbors:
-            self.assertEqual([LogEntry(term=1, value=100)], i._log)
+            self.assertEqual([LogEntry(term=0), LogEntry(term=1, value=100)], i._log)
 
     async def test_timeout(self):
         pass

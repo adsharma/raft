@@ -7,6 +7,7 @@ import zmq
 import zmq.asyncio
 
 from ..boards.memory_board import Board, MemoryBoard
+from ..messages.append_entries import LogEntry
 from ..states.state import State
 
 
@@ -32,6 +33,7 @@ class Server:
 
     def _clear(self):
         self._total_nodes = len(self._neighbors)
+        self._log = [LogEntry(term=0)]  # Dummy node per raft spec
         self._commitIndex = 0
         self._currentTerm = 0
         self._lastApplied = 0

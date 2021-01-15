@@ -43,7 +43,6 @@ class Leader(State):
     async def on_response_received(self, message):
         # Was the last AppendEntries good?
         if not message.response:
-            return self, None  # raft spec doesn't seem to have to this logic
             # No, so lets back up the log for this node
             self._nextIndexes[message.sender] = max(
                 0, self._nextIndexes[message.sender] - 1
@@ -117,7 +116,7 @@ class Leader(State):
                     n = n._name
                 # With ZeroMQServer we use n.name, but for ZREServer, neighbor is an id
                 last_log_index = self._server._lastLogIndex
-                if self._nextIndexes[n] <= last_log_index:
+                if self._nextIndexes[n] <= last_log_index and last_log_index > 0:
                     num = last_log_index - self._nextIndexes[n] + 1
                     await self._send_entries(n, num)
 
