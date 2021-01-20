@@ -1,13 +1,14 @@
 import logging
 import uuid
-from typing import Union
+from typing import Dict, Union
 
+from cachetools import TTLCache
 from pyre import Pyre
 from serde.msgpack import from_msgpack, to_msgpack
 
 from ..boards.memory_board import MemoryBoard
-from ..messages.base import BaseMessage
 from ..messages.append_entries import AppendEntriesMessage, LogEntry
+from ..messages.base import BaseMessage
 from ..states.state import State
 from .server import Server
 
@@ -28,6 +29,7 @@ class ZREServer(Server):
         super().__init__(node.uuid().hex, state, log, messageBoard, [])
         self._node = node
         self._human_name = name
+        self._outstanding_index = TTLCache(maxsize=128, ttl=10)
 
     def add_neighbor(self, neighbor):
         self._neighbors.append(neighbor)
@@ -37,6 +39,8 @@ class ZREServer(Server):
 
     async def send_message(self, message: Union[BaseMessage, bytes]):
         logger.debug(f"sending: {self._state}: {message}")
+        if isinstance(message, AppendEntriesMessage):
+            self._outstanding_index[message.id] = message
         if isinstance(message, bytes):
             self._node.shout(self.ZRE_GROUP, b"/raft " + message)
         else:

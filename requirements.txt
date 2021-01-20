@@ -1,5 +1,6 @@
 pyzmq>=20
 pyserde>=0.2.1
+cachetools>=4.1.1
 
 
 

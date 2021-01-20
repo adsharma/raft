@@ -37,14 +37,13 @@ class Follower(Voter):
         #   So, we make sure that the prevLogIndex term is always
         #   equal to the server.
         if len(log) > 0 and log[message.prev_log_index].term != message.prev_log_term:
-
             # There is a conflict we need to resync so delete everything
             #   from this prevLogIndex and forward and send a failure
             #   to the server.
             self._server._log = log = log[: message.prev_log_index]
             response = False
             self._server._lastLogIndex = message.prev_log_index
-            self._server._lastLogTerm = message.prev_log_term
+            self._server._lastLogTerm = log[-1].term if len(log) > 0 else 0
         # The induction proof held so lets check if the commitIndex
         #   value is the same as the one on the leader
         else:

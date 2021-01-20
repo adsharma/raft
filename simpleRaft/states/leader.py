@@ -1,6 +1,10 @@
 import asyncio
 import logging
+import statistics
+import uuid
 from collections import defaultdict
+
+from simpleRaft.messages.base import BaseMessage
 
 from ..messages.append_entries import AppendEntriesMessage
 from .config import HEART_BEAT_INTERVAL, SEND_ENTRIES_INTERVAL
@@ -41,15 +45,30 @@ class Leader(State):
         return self, None
 
     async def on_response_received(self, message):
+        if hasattr(self._server, "_outstanding_index"):
+            if message.id in self._server._outstanding_index:
+                original_message: AppendEntriesMessage = self._server._outstanding_index[
+                    message.id
+                ]
+                num_entries = len(original_message.entries)
+            else:
+                logger.warn(f"Can't find message id: {message.id}")
+                return self, None
+        else:
+            num_entries = 0
+
         # Was the last AppendEntries good?
         if not message.response:
             # No, so lets back up the log for this node
-            self._nextIndexes[message.sender] = max(
-                0, self._nextIndexes[message.sender] - 1
-            )
-
+            if num_entries == 0:
+                # Need to backup by at least 1
+                num_entries = 1
+            logger.debug(f"Backing up {message.sender} by {num_entries}")
             # Get the next log entry to send to the client.
-            previousIndex = max(0, self._nextIndexes[message.sender] - 1)
+            previousIndex = max(0, self._nextIndexes[message.sender] - num_entries)
+            self._nextIndexes[message.sender] = previousIndex
+            self._matchIndex[message.sender] = max(0, previousIndex - 1)
+
             previous = self._server._log[previousIndex]
             current = self._server._log[self._nextIndexes[message.sender]]
 
@@ -67,12 +86,14 @@ class Leader(State):
 
             await self._server.send_message(appendEntry)
         else:
-            # The last append was good so increase their index.
-            self._nextIndexes[message.sender] += 1
-
-            # Are they caught up?
-            if self._nextIndexes[message.sender] > self._server._lastLogIndex:
-                self._nextIndexes[message.sender] = self._server._lastLogIndex
+            if num_entries > 0:
+                # The last append was good so increase their index.
+                self._matchIndex[message.sender] += num_entries
+                self._nextIndexes[message.sender] = self._matchIndex[message.sender] + 1
+                logger.debug(f"Advanced {message.sender} by {num_entries}")
+                self._server._commitIndex = statistics.median_low(
+                    self._matchIndex.values()
+                )
 
         return self, None
 
@@ -96,16 +117,19 @@ class Leader(State):
         asyncio.create_task(schedule_another_beat())
 
     async def _send_entries(self, peer, num: int):
+        prev_log_index = self._server._lastLogIndex - num
         message = AppendEntriesMessage(
             self._server._name,
             peer,
             self._server._currentTerm,
             leader_id=self._server._name,
-            prev_log_index=self._server._lastLogIndex - num,
-            prev_log_term=self._server._lastLogTerm,
+            prev_log_index=prev_log_index,
+            prev_log_term=self._server._log[prev_log_index].term,
             entries=self._server._log[-num:],
             leader_commit=self._server._commitIndex,
         )
+        logger.debug(f"sending {num} entries in {message.id}")
+        self._nextIndexes[peer] += num
         await self._server.send_message(message)
 
     async def append_entries_loop(self):

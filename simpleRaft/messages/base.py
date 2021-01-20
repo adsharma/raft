@@ -23,6 +23,7 @@ class BaseMessage:
     sender: Union[int, str, uuid.UUID]  # int used only on tests
     receiver: Union[int, str, uuid.UUID, None]
     term: int
+    id: str = ""
     data: Union[int, str, Dict, None] = None
     timestamp: int = int(time.time())
 

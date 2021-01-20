@@ -1,3 +1,4 @@
+import uuid
 from dataclasses import dataclass, field
 from enum import IntEnum
 from typing import List, Optional, Union
@@ -40,3 +41,7 @@ class AppendEntriesMessage(BaseMessage):
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
         BaseMessage.EXT_DICT[LogEntry._type] = LogEntry  # type: ignore
+
+    def __post_init__(self):
+        if self.id == "":
+            self.id = uuid.uuid4().hex
