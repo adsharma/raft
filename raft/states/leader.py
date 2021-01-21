@@ -86,7 +86,7 @@ class Leader(State):
             if num_entries > 0:
                 # The last append was good so increase their index.
                 self._matchIndex[message.sender] += num_entries
-                self._nextIndexes[message.sender] = self._matchIndex[message.sender] + 1
+                self._nextIndexes[message.sender] = max(self._nextIndexes[message.sender], self._matchIndex[message.sender] + 1)
                 logger.debug(f"Advanced {message.sender} by {num_entries}")
                 self._server._commitIndex = statistics.median_low(
                     self._matchIndex.values()
