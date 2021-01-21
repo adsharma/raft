@@ -2,6 +2,6 @@
 Usage
 =====
 
-To use simpleRaft in a project::
+To use raft in a project::
 
-    import simpleraft
+    import raft

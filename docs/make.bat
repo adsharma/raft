@@ -9,7 +9,7 @@ if "%SPHINXBUILD%" == "" (
 )
 set SOURCEDIR=.
 set BUILDDIR=_build
-set SPHINXPROJ=simpleraft
+set SPHINXPROJ=raft
 
 if "%1" == "" goto help
 

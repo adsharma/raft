@@ -64,7 +64,7 @@ class Voter(State):
             self.leader = message.leader_id
             logger.info(f"Accepted new leader: {self.leader}")
 
-            from simpleRaft.states.follower import \
+            from raft.states.follower import \
                 Follower  # TODO: Fix circular import
 
             if not isinstance(self, Follower):

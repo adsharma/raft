@@ -1,4 +1,4 @@
-simpleRaft
+raft
 ==========
 [![Build Status](https://travis-ci.org/adsharma/raft.png?branch=master)](https://travis-ci.org/adsharma/raft)
 

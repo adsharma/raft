@@ -3,12 +3,12 @@
 import unittest
 import uuid
 
-from simpleRaft.boards.db_board import DBBoard
-from simpleRaft.messages.append_entries import AppendEntriesMessage, LogEntry
-from simpleRaft.servers.server import ZeroMQServer
-from simpleRaft.states.candidate import Candidate
-from simpleRaft.states.follower import Follower
-from simpleRaft.states.leader import Leader
+from raft.boards.db_board import DBBoard
+from raft.messages.append_entries import AppendEntriesMessage, LogEntry
+from raft.servers.server import ZeroMQServer
+from raft.states.candidate import Candidate
+from raft.states.follower import Follower
+from raft.states.leader import Leader
 
 N = 5
 

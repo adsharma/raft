@@ -2,13 +2,13 @@
 
 import unittest
 
-from simpleRaft.boards.memory_board import MemoryBoard
-from simpleRaft.messages.append_entries import AppendEntriesMessage
-from simpleRaft.messages.request_vote import RequestVoteMessage
-from simpleRaft.servers.server import ZeroMQServer as Server
-from simpleRaft.states.candidate import Candidate
-from simpleRaft.states.follower import Follower
-from simpleRaft.states.leader import Leader
+from raft.boards.memory_board import MemoryBoard
+from raft.messages.append_entries import AppendEntriesMessage
+from raft.messages.request_vote import RequestVoteMessage
+from raft.servers.server import ZeroMQServer as Server
+from raft.states.candidate import Candidate
+from raft.states.follower import Follower
+from raft.states.leader import Leader
 
 
 class TestCandidateServer(unittest.IsolatedAsyncioTestCase):

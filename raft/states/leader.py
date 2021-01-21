@@ -4,7 +4,7 @@ import statistics
 import uuid
 from collections import defaultdict
 
-from simpleRaft.messages.base import BaseMessage
+from raft.messages.base import BaseMessage
 
 from ..messages.append_entries import AppendEntriesMessage
 from .config import HEART_BEAT_INTERVAL, SEND_ENTRIES_INTERVAL

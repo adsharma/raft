@@ -3,11 +3,11 @@
 import asyncio
 import unittest
 
-from simpleRaft.boards.memory_board import MemoryBoard
-from simpleRaft.messages.append_entries import AppendEntriesMessage, LogEntry
-from simpleRaft.messages.request_vote import RequestVoteMessage
-from simpleRaft.servers.server import ZeroMQServer as Server
-from simpleRaft.states.follower import Follower
+from raft.boards.memory_board import MemoryBoard
+from raft.messages.append_entries import AppendEntriesMessage, LogEntry
+from raft.messages.request_vote import RequestVoteMessage
+from raft.servers.server import ZeroMQServer as Server
+from raft.states.follower import Follower
 
 
 class TestFollowerServer(unittest.IsolatedAsyncioTestCase):

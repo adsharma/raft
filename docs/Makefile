@@ -4,7 +4,7 @@
 # You can set these variables from the command line.
 SPHINXOPTS    =
 SPHINXBUILD   = python -msphinx
-SPHINXPROJ    = simpleraft
+SPHINXPROJ    = raft
 SOURCEDIR     = .
 BUILDDIR      = _build
 

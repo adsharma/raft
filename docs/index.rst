@@ -1,4 +1,4 @@
-Welcome to simpleRaft's documentation!
+Welcome to raft's documentation!
 ======================================
 
 .. toctree::

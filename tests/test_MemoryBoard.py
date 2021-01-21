@@ -2,8 +2,8 @@
 
 import unittest
 
-from simpleRaft.boards.memory_board import MemoryBoard
-from simpleRaft.messages.base import BaseMessage
+from raft.boards.memory_board import MemoryBoard
+from raft.messages.base import BaseMessage
 
 
 class TestMemoryBoard(unittest.IsolatedAsyncioTestCase):
