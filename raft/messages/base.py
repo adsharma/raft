@@ -40,4 +40,4 @@ class BaseMessage:
 
     @staticmethod
     def default() -> "BaseMessage":
-        return BaseMessage(0, 0, 0, 0, 0)
+        return BaseMessage(0, 0, 0, "", 0, 0)

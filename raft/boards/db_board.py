@@ -37,7 +37,7 @@ class DBBoard(Board):
             self._db[f"{self.i:09}"] = entry
             self.i = self.i + 1
             if entry.command == Command.PUT and entry.key is not None:
-                self._kv[entry.key] = entry.value
+                self._kv[str(entry.key)] = entry.value
         self._db.sync()
         self._kv.sync()
 
