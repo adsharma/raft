@@ -2,7 +2,7 @@ import time
 import uuid
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import Any, Dict, Optional, Union
+from typing import Dict, Union
 
 from serde import deserialize, serialize
 

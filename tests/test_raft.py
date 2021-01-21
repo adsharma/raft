@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import unittest
-import uuid
 
 from raft.boards.db_board import DBBoard
 from raft.messages.append_entries import AppendEntriesMessage, LogEntry

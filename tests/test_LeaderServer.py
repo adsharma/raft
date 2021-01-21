@@ -4,9 +4,7 @@ import unittest
 
 from raft.boards.memory_board import MemoryBoard
 from raft.messages.append_entries import AppendEntriesMessage, LogEntry
-from raft.messages.request_vote import RequestVoteMessage
 from raft.servers.server import ZeroMQServer as Server
-from raft.states.candidate import Candidate
 from raft.states.follower import Follower
 from raft.states.leader import Leader
 

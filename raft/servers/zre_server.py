@@ -1,6 +1,6 @@
 import logging
 import uuid
-from typing import Dict, Union
+from typing import Union
 
 from cachetools import TTLCache
 from pyre import Pyre
