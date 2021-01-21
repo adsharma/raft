@@ -59,7 +59,7 @@ class TestRaft(unittest.IsolatedAsyncioTestCase):
         for i in self.leader._neighbors:
             await i.on_message(await i._messageBoard.get_message())
 
-        for _, i in self.leader._messageBoard._board._queue:
+        for i in self.leader._messageBoard:
             await self.leader.on_message(i)
 
     async def test_heart_beat(self):
