@@ -1,4 +1,3 @@
-import asyncio
 import glob
 import os
 import shelve
@@ -7,7 +6,7 @@ from typing import Optional
 
 from raft.messages.base import BaseMessage
 
-from ..messages.append_entries import AppendEntriesMessage, Command, LogEntry
+from ..messages.append_entries import AppendEntriesMessage, Command
 from .board import Board
 
 

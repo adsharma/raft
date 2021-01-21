@@ -64,7 +64,7 @@ class TestRaft(unittest.IsolatedAsyncioTestCase):
 
     async def test_heart_beat(self):
         await self._perform_heart_beat()
-        expected = dict(("S%d" % i, 0) for i in range(1, N))
+        expected = dict(("S%d" % i, 1) for i in range(1, N))
         self.assertEqual(expected, self.leader._state._nextIndex)
 
     async def test_append(self):
