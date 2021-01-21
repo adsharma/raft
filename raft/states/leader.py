@@ -17,6 +17,9 @@ class Leader(State):
         self.timer = None  # Used by followers/candidates for leader timeout
         asyncio.create_task(self.append_entries_loop())
 
+    def __repr__(self):
+        return f"Leader:\n\tnextIndex: {self._nextIndexes}\n\tmatchIndex: {self._matchIndex}"
+
     def set_server(self, server):
         self._server = server
         self.leader = self._server._name
