@@ -40,7 +40,7 @@ class TestLeaderServer(unittest.IsolatedAsyncioTestCase):
 
     async def test_leader_server_sends_heartbeat_to_all_neighbors(self):
         await self._perform_heart_beat()
-        self.assertEqual({1: 1, 2: 1, 3: 1}, self.leader._state._nextIndexes)
+        self.assertEqual({1: 1, 2: 1, 3: 1}, self.leader._state._nextIndex)
 
     async def test_leader_server_sends_appendentries_to_all_neighbors_and_is_appended_to_their_logs(
         self
