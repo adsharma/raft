@@ -64,11 +64,11 @@ class ZeroMQServer(Server):
     def __init__(
         self, name, state: State, log=None, messageBoard=None, neighbors=None, port=0
     ):
-        if log == None:
+        if log is None:
             log = []
-        if neighbors == None:
+        if neighbors is None:
             neighbors = []
-        if messageBoard == None:
+        if messageBoard is None:
             messageBoard = MemoryBoard()
 
         super().__init__(name, state, log, messageBoard, neighbors)
@@ -85,7 +85,7 @@ class ZeroMQServer(Server):
         while not self._stop:
             try:
                 message = await socket.recv()
-            except zmq.error.ContextTerminated as e:
+            except zmq.error.ContextTerminated:
                 break
             if not message:
                 continue

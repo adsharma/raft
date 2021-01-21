@@ -2,7 +2,6 @@
 
 import unittest
 
-from raft.boards.memory_board import MemoryBoard
 from raft.servers.server import ZeroMQServer as Server
 from raft.states.candidate import Candidate
 from raft.states.follower import Follower
@@ -99,8 +98,6 @@ class TestCandidateServer(unittest.IsolatedAsyncioTestCase):
         for i in range(6):
             followers.append(Server(i, Follower()))
 
-        board = MemoryBoard()
-        state = Candidate()
         c0 = Server(7, Candidate(), neighbors=followers[0:2])
         c1 = Server(8, Candidate(), neighbors=followers[2:])
         await c0._state._start_election()
