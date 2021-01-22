@@ -55,17 +55,31 @@ class TestFollowerServer(unittest.IsolatedAsyncioTestCase):
             0,
             1,
             2,
-            prev_log_index=0,
+            prev_log_index=1,
             prev_log_term=1,
             leader_commit=1,
-            entries=[LogEntry(term=1, value=100)],
+            entries=[LogEntry(term=2, value=100)],
         )
 
         await self.server.on_message(msg)
 
         msg = await self.oserver._messageBoard.get_message()
         self.assertEqual(False, msg.response)
-        self.assertEqual([LogEntry(term=1, value=100)], self.server._log)
+        self.assertEqual([LogEntry(term=0)], self.server._log)
+        # Try again with a matching term/index
+        msg = AppendEntriesMessage(
+            0,
+            1,
+            2,
+            prev_log_index=0,
+            prev_log_term=0,
+            leader_commit=1,
+            entries=[LogEntry(term=2, value=100)],
+        )
+        await self.server.on_message(msg)
+        self.assertEqual(
+            [LogEntry(term=0), LogEntry(term=2, value=100)], self.server._log
+        )
 
     async def test_follower_server_on_receive_message_where_log_contains_conflicting_entry_at_new_index(
         self
@@ -100,13 +114,15 @@ class TestFollowerServer(unittest.IsolatedAsyncioTestCase):
             1,
             2,
             prev_log_index=0,
-            prev_log_term=100,
+            prev_log_term=0,
             leader_commit=1,
             entries=[LogEntry(term=1, value=100)],
         )
 
         await self.server.on_message(msg)
-        self.assertEqual(LogEntry(term=1, value=100), self.server._log[0])
+        self.assertEqual(
+            [LogEntry(term=0), LogEntry(term=1, value=100)], self.server._log
+        )
 
     async def test_follower_server_on_receive_vote_request_message(self):
         msg = RequestVoteMessage(0, 1, 2)

@@ -32,7 +32,6 @@ class Follower(Voter):
             await self._send_response_message(message)
             return self, None
 
-        response = True
         # We need to hold the induction proof of the algorithm here.
         #   So, we make sure that the prevLogIndex term is always
         #   equal to the server.
@@ -41,25 +40,26 @@ class Follower(Voter):
             #   from this prevLogIndex and forward and send a failure
             #   to the server.
             self._server._log = log = log[: message.prev_log_index]
-            response = False
             self._server._lastLogIndex = message.prev_log_index
             self._server._lastLogTerm = log[-1].term if len(log) > 0 else 0
+
+            await self._send_response_message(message, yes=False)
+            return self, None
         # The induction proof held so lets check if the commitIndex
         #   value is the same as the one on the leader
-        else:
-            # Make sure that leaderCommit is > 0 and that the
-            #   data is different here
-            if (
-                len(log) > 0
-                and message.leader_commit > 0
-                and message.leader_commit < len(log)
-                and log[message.leader_commit].term != message.term
-            ):
-                # Data was found to be different so we fix that
-                #   by taking the current log and slicing it to the
-                #   leaderCommit + 1 range then setting the last
-                #   value to the commitValue
-                self._server._log = log = log[: self._server._commitIndex]
+        # Make sure that leaderCommit is > 0 and that the
+        #   data is different here
+        if (
+            len(log) > 0
+            and message.leader_commit > 0
+            and message.leader_commit < len(log)
+            and log[message.leader_commit].term != message.term
+        ):
+            # Data was found to be different so we fix that
+            #   by taking the current log and slicing it to the
+            #   leaderCommit + 1 range then setting the last
+            #   value to the commitValue
+            self._server._log = log = log[: self._server._commitIndex]
 
         # Apply the log entries
         for e in message.entries:
@@ -68,7 +68,6 @@ class Follower(Voter):
 
         self._server._lastLogIndex = len(log) - 1
         self._server._lastLogTerm = log[-1].term
-        self._commitIndex = max(0, len(log) - 1)
 
-        await self._send_response_message(message, yes=response)
+        await self._send_response_message(message)
         return self, None
