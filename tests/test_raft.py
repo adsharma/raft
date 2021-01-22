@@ -86,8 +86,8 @@ class TestRaft(unittest.IsolatedAsyncioTestCase):
 
     async def test_dirty(self):
         self.leader._neighbors[0]._log.append(LogEntry(term=1, index=1, value=100))
-        self.leader._neighbors[0]._log.append(LogEntry(term=2, index=0, value=200))
-        self.leader._neighbors[1]._log.append(LogEntry(term=3, index=0, value=200))
+        self.leader._neighbors[0]._log.append(LogEntry(term=2, index=2, value=200))
+        self.leader._neighbors[1]._log.append(LogEntry(term=3, index=1, value=200))
         self.leader._log.append(LogEntry(term=1, index=1, value=100))
 
         await self._perform_heart_beat()

@@ -84,7 +84,6 @@ class TestFollowerServer(unittest.IsolatedAsyncioTestCase):
     async def test_follower_server_on_receive_message_where_log_contains_conflicting_entry_at_new_index(
         self
     ):
-
         self.server._log.append(LogEntry(term=1, index=1, value=0))
         self.server._log.append(LogEntry(term=1, index=2, value=200))
         self.server._log.append(LogEntry(term=1, index=3, value=300))
@@ -94,8 +93,8 @@ class TestFollowerServer(unittest.IsolatedAsyncioTestCase):
             0,
             1,
             2,
-            prev_log_index=1,
-            prev_log_term=1,
+            prev_log_index=0,
+            prev_log_term=0,
             leader_commit=1,
             entries=[LogEntry(term=1, index=1, value=100)],
         )
