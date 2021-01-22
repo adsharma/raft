@@ -42,6 +42,9 @@ class Leader(State):
         return heart_beat_task
 
     async def on_append_entries(self, message: AppendEntriesMessage):
+        if message.term > self._server._currentTerm:
+            return await self._accept_leader(message, None)
+
         for entry in message.entries:
             self._server._log.append(entry)
             self._server._lastLogIndex = len(self._server._log) - 1
@@ -123,7 +126,7 @@ class Leader(State):
             leader_id=self._server._name,
             prev_log_index=prev_log_index,
             prev_log_term=self._server._log[prev_log_index].term,
-            entries=self._server._log[prev_log_index + 1: prev_log_index + 1 + num],
+            entries=self._server._log[prev_log_index + 1 : prev_log_index + 1 + num],
             leader_commit=self._server._commitIndex,
         )
         logger.debug(f"sending {num} entries in {message.id}")

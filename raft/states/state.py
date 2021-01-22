@@ -1,6 +1,7 @@
 import logging
 import random
-from typing import TYPE_CHECKING
+from asyncio.events import TimerHandle
+from typing import TYPE_CHECKING, Optional
 
 from ..messages.base import BaseMessage
 from ..messages.response import ResponseMessage
@@ -87,3 +88,18 @@ class State:
             current_term=self._server._currentTerm,
         )
         await self._server.send_message(response)
+
+    async def _accept_leader(self, message, timer: Optional[TimerHandle]):
+        if self.leader != message.leader_id:
+            self.leader = message.leader_id
+            logger.info(f"Accepted new leader: {self.leader}")
+
+            from raft.states.follower import Follower  # TODO: Fix circular import
+
+            if not isinstance(self, Follower):
+                if timer is not None:
+                    timer.cancel()
+                follower = Follower()
+                follower.leader = self.leader
+                follower.set_server(self._server)
+                return follower, None

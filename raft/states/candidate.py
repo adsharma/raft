@@ -1,9 +1,12 @@
 import asyncio
+import logging
 
-from ..messages.request_vote import RequestVoteMessage
+from ..messages.request_vote import RequestVoteMessage, RequestVoteResponseMessage
 from .config import CANDIDATE_TIMEOUT
 from .leader import Leader
 from .voter import Voter
+
+logger = logging.getLogger("raft")
 
 
 class Candidate(Voter):
@@ -20,11 +23,17 @@ class Candidate(Voter):
     async def on_vote_request(self, message):
         return self, None
 
-    async def on_vote_received(self, message):
-        if message.sender not in self._votes:
+    async def on_vote_received(self, message: RequestVoteResponseMessage):
+        if message.sender not in self._votes and message.response:
             self._votes[message.sender] = message
 
-            if len(list(self._votes.keys())) > (self._server._total_nodes - 1) / 2:
+            num_votes = len(self._votes.keys())
+            total_nodes = self._server._total_nodes
+            logger.debug(f"{num_votes} {total_nodes}\n{message}")
+            # Guard for the case we're network partitioned from other nodes.
+            # We shouldn't promote ourselves to a leader if the network comes
+            # back
+            if num_votes > 1 and num_votes > (total_nodes / 2):
                 self.timer.cancel()
                 leader = Leader()
                 leader.set_server(self._server)

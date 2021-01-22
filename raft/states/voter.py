@@ -20,11 +20,16 @@ class Voter(State):
         return loop.call_later(self._timeoutTime, self.on_leader_timeout)
 
     async def on_vote_request(self, message):
+        if self._last_vote is not None:
+            last_vote_term, voted_for = self._last_vote
+            if message.term > last_vote_term:
+                self._last_vote = None
         if (
             self._last_vote is None
             and message.last_log_index >= self._server._lastLogIndex
         ):
-            self._last_vote = message.sender
+            # TODO: Put this on stable storage
+            self._last_vote = (message.term, message.sender)
             await self._send_vote_response_message(message)
         else:
             await self._send_vote_response_message(message, yes=False)
@@ -60,16 +65,4 @@ class Voter(State):
             await self._send_response_message(message, yes=False)
             return self, None
 
-        if self.leader != message.leader_id:
-            self.leader = message.leader_id
-            logger.info(f"Accepted new leader: {self.leader}")
-
-            from raft.states.follower import \
-                Follower  # TODO: Fix circular import
-
-            if not isinstance(self, Follower):
-                self.timer.cancel()
-                follower = Follower()
-                follower.leader = self.leader
-                follower.set_server(self._server)
-                return follower, None
+        return await self._accept_leader(message, self.timer)

@@ -32,7 +32,7 @@ class Server:
         self._messageBoard.set_owner(self)
 
     def _clear(self):
-        self._total_nodes = len(self._neighbors)
+        self._total_nodes = len(self._neighbors) + 1
         self._log = [LogEntry(term=0)]  # Dummy node per raft spec
         self._commitIndex = 0
         self._currentTerm = 0
@@ -56,6 +56,14 @@ class Server:
 
     async def on_message(self, message):
         ...
+
+    def add_neighbor(self, neighbor):
+        self._neighbors.append(neighbor)
+        self._total_nodes = len(self._neighbors) + 1
+
+    def remove_neighbor(self, neighbor):
+        self._neighbors.remove(neighbor)
+        self._total_nodes = len(self._neighbors) + 1
 
 
 class ZeroMQServer(Server):
@@ -120,12 +128,6 @@ class ZeroMQServer(Server):
 
     def stop(self):
         self._stop = True
-
-    def add_neighbor(self, neighbor):
-        self._neighbors.append(neighbor)
-
-    def remove_neighbor(self, neighbor):
-        self._neighbors.remove(neighbor)
 
     async def send_message(self, message):
         if message.receiver is None:

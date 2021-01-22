@@ -33,9 +33,11 @@ class ZREServer(Server):
 
     def add_neighbor(self, neighbor):
         self._neighbors.append(neighbor)
+        self._total_nodes = len(self._neighbors) + 1
 
     def remove_neighbor(self, neighbor):
         self._neighbors.remove(neighbor)
+        self._total_nodes = len(self._neighbors) + 1
 
     async def send_message(self, message: Union[BaseMessage, bytes]):
         logger.debug(f"sending: {self._state}: {message}")
