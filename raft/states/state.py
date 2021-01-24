@@ -34,7 +34,9 @@ class State:
         # Is the messages.term < ours? If so we need to tell
         #   them this so they don't get left behind.
         elif message.term < self._server._currentTerm:
-            await self._send_response_message(message, yes=False)
+            if _type != BaseMessage.MessageType.Response:
+                # Do not send a response to a response
+                await self._send_response_message(message, yes=False)
             return self, None
 
         if _type == BaseMessage.MessageType.AppendEntries:

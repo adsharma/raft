@@ -11,6 +11,8 @@ logger = logging.getLogger("raft")
 
 
 class Leader(State):
+    TEST_ONLY_DISABLE_SEND_LOOP = False
+
     def __init__(self):
         def default_next_index() -> int:
             return self._server._lastLogIndex + 1
@@ -18,7 +20,8 @@ class Leader(State):
         self._nextIndex = defaultdict(default_next_index)
         self._matchIndex = defaultdict(int)
         self.timer = None  # Used by followers/candidates for leader timeout
-        asyncio.create_task(self.append_entries_loop())
+        if not self.TEST_ONLY_DISABLE_SEND_LOOP:
+            asyncio.create_task(self.append_entries_loop())
 
     def __repr__(self):
         return (
@@ -30,7 +33,10 @@ class Leader(State):
         self.leader = self._server._name
         logger.info(f"{self._server._name}: New Leader")
         loop = asyncio.get_event_loop()
-        heart_beat_task = loop.create_task(self._send_heart_beat())
+        if not self.TEST_ONLY_DISABLE_SEND_LOOP:
+            heart_beat_task = loop.create_task(self._send_heart_beat())
+        else:
+            heart_beat_task = loop.create_task(self._send_one_heart_beat())
 
         for n in self._server._neighbors:
             # With ZeroMQServer we use n.name, but for ZREServer, neighbor is an id
@@ -52,7 +58,7 @@ class Leader(State):
             entry.index = self._server._lastLogIndex
         return self, None
 
-    async def on_response_received(self, message):
+    async def on_response_received(self, message, test_original_message=None):
         original_message = None
         if hasattr(self._server, "_outstanding_index"):
             if message.id in self._server._outstanding_index:
@@ -63,6 +69,9 @@ class Leader(State):
                 return self, None
         else:
             num_entries = 0
+            if test_original_message:
+                original_message = test_original_message
+                num_entries = len(test_original_message.entries)
 
         # Was the last AppendEntries good?
         if not message.response:
@@ -98,7 +107,7 @@ class Leader(State):
 
         return self, None
 
-    async def _send_heart_beat(self):
+    async def _send_one_heart_beat(self):
         message = AppendEntriesMessage(
             self._server._name,
             None,
@@ -110,6 +119,9 @@ class Leader(State):
             leader_commit=self._server._commitIndex,
         )
         await self._server.send_message(message)
+
+    async def _send_heart_beat(self):
+        await self._send_one_heart_beat()
 
         async def schedule_another_beat():
             await asyncio.sleep(HEART_BEAT_INTERVAL)
