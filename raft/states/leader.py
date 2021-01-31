@@ -101,9 +101,13 @@ class Leader(State):
                     self._matchIndex[message.sender] + 1,
                 )
                 logger.debug(f"Advanced {message.sender} by {num_entries}")
-                self._server._commitIndex = statistics.median_low(
-                    self._matchIndex.values()
-                )
+                new_commit_index = statistics.median_low(self._matchIndex.values())
+                if (
+                    self._server._log[new_commit_index].term
+                    == self._server._currentTerm
+                    and new_commit_index > self._server._commitIndex
+                ):
+                    self._server._commitIndex = new_commit_index
 
         return self, None
 
