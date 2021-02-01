@@ -3,7 +3,7 @@ import logging
 import statistics
 from collections import defaultdict
 
-from ..messages.append_entries import AppendEntriesMessage
+from ..messages.append_entries import AppendEntriesMessage, Command
 from .config import HEART_BEAT_INTERVAL, SEND_ENTRIES_INTERVAL
 from .state import State
 
@@ -50,6 +50,12 @@ class Leader(State):
     async def on_append_entries(self, message: AppendEntriesMessage):
         if message.term > self._server._currentTerm:
             return await self._accept_leader(message, None)
+
+        if (
+            len(message.entries) == 1
+            and message.entries[0].command == Command.QUORUM_PUT
+        ):
+            self._server._currentTerm += 1
 
         for entry in message.entries:
             self._server._log.append(entry)
@@ -125,6 +131,15 @@ class Leader(State):
         await self._server.send_message(message)
 
     async def _send_heart_beat(self):
+        write_initial_quorum = len(self._server._log) == 1
+        if write_initial_quorum:
+            await self._server.quorum_set(self.leader, "add")
+            for n in self._server._neighbors:
+                # With ZeroMQServer we use n.name, but for ZREServer, neighbor is an id
+                if hasattr(n, "_name"):
+                    n = n._name
+                await self._server.quorum_set(n, "add")
+
         await self._send_one_heart_beat()
 
         async def schedule_another_beat():

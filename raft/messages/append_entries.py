@@ -11,6 +11,8 @@ from .base import BaseMessage
 class Command(IntEnum):
     PUT = 0
     GET = 1
+    QUORUM_PUT = 2
+    QUORUM_GET = 3
 
 
 @deserialize

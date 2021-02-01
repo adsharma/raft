@@ -65,6 +65,8 @@ class Server:
         self._neighbors.remove(neighbor)
         self._total_nodes = len(self._neighbors) + 1
 
+    async def quorum_set(self, neighbor: str, op: str) -> None:
+        pass
 
 class ZeroMQServer(Server):
     "This implementation is suitable for single process testing"
