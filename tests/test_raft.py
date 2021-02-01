@@ -8,8 +8,10 @@ from raft.servers.server import ZeroMQServer
 from raft.states.candidate import Candidate
 from raft.states.follower import Follower
 from raft.states.leader import Leader
+from raft.states.learner import Learner
 
-N = 5
+N = 5  # voting members
+M = 6  # learners
 
 
 class TestRaft(unittest.IsolatedAsyncioTestCase):
@@ -20,6 +22,14 @@ class TestRaft(unittest.IsolatedAsyncioTestCase):
             s = ZeroMQServer(
                 f"S{i}",
                 Follower(),
+                port=6666 + i,
+                messageBoard=DBBoard(prefix=f"/tmp/DB{i}"),
+            )
+            cls.servers.append(s)
+        for i in range(N, N + M):
+            s = ZeroMQServer(
+                f"S{i}",
+                Learner(),
                 port=6666 + i,
                 messageBoard=DBBoard(prefix=f"/tmp/DB{i}"),
             )
@@ -48,7 +58,7 @@ class TestRaft(unittest.IsolatedAsyncioTestCase):
 
     async def asyncSetUp(self):
         await self.asyncSetUpClass()
-        for i in range(N):
+        for i in range(N + M):
             self.servers[i]._state.__init__()
             self.servers[i]._messageBoard.clear()
             self.servers[i]._log.clear()
@@ -64,7 +74,7 @@ class TestRaft(unittest.IsolatedAsyncioTestCase):
 
     async def test_heart_beat(self):
         await self._perform_heart_beat()
-        expected = dict(("S%d" % i, 1) for i in range(1, N))
+        expected = dict(("S%d" % i, 1) for i in range(1, N + M))
         self.assertEqual(expected, self.leader._state._nextIndex)
 
     async def test_append(self):
