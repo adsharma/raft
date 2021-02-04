@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import uuid
 from typing import Union
@@ -7,7 +8,7 @@ from pyre import Pyre
 from serde.msgpack import from_msgpack, to_msgpack
 
 from ..boards.memory_board import MemoryBoard
-from ..messages.append_entries import AppendEntriesMessage, LogEntry
+from ..messages.append_entries import AppendEntriesMessage, LogEntry, Command
 from ..messages.base import BaseMessage
 from ..states.state import State
 from .server import Server
@@ -32,12 +33,18 @@ class ZREServer(Server):
         self._outstanding_index = TTLCache(maxsize=128, ttl=10)
 
     def add_neighbor(self, neighbor):
+        loop = asyncio.get_event_loop()
+        task = loop.create_task(self.quorum_set(neighbor, "add"))
         self._neighbors.append(neighbor)
         self._total_nodes = len(self._neighbors) + 1
+        return task
 
     def remove_neighbor(self, neighbor):
+        loop = asyncio.get_event_loop()
+        task = loop.create_task(self.quorum_set(neighbor, "remove"))
         self._neighbors.remove(neighbor)
         self._total_nodes = len(self._neighbors) + 1
+        return task
 
     async def send_message(self, message: Union[BaseMessage, bytes]):
         logger.debug(f"sending: {self._state}: {message}")
@@ -113,3 +120,26 @@ class ZREServer(Server):
 
     async def get(self, key: str):
         return await self._messageBoard.get(key)
+
+    async def quorum_set(self, neighbor: str, op: str) -> None:
+        leader = self._state.leader
+        if leader is not None:
+            append_entries = AppendEntriesMessage(
+                self._name,
+                leader,
+                self._currentTerm,
+                entries=[
+                    LogEntry(
+                        command=Command.QUORUM_PUT,
+                        term=self._currentTerm,
+                        index=self._commitIndex,
+                        key=neighbor,
+                        value=op,
+                    )
+                ],
+            )
+            await self.send_message(append_entries)
+            # TODO: wait for the leader to respond
+        else:
+            if self._currentTerm > 0:
+                raise Exception("Leader not found")
