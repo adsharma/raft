@@ -39,6 +39,7 @@ class Server:
         self._lastApplied = 0
         self._lastLogIndex = 0
         self._lastLogTerm = None
+        self._quorum = set()
 
     async def send_message(self, message):
         ...
@@ -59,10 +60,12 @@ class Server:
 
     def add_neighbor(self, neighbor):
         self._neighbors.append(neighbor)
+        self._quorum.add(neighbor._name)
         self._total_nodes = len(self._neighbors) + 1
 
     def remove_neighbor(self, neighbor):
         self._neighbors.remove(neighbor)
+        self._quorum.remove(neighbor._name)
         self._total_nodes = len(self._neighbors) + 1
 
     async def quorum_set(self, neighbor: str, op: str) -> None:
