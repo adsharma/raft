@@ -57,7 +57,7 @@ class ZREServer(Server):
                 await self._receive_message(message)
                 return
 
-            message_bytes = to_msgpack(message, ext_dict=BaseMessage.EXT_DICT)
+            message_bytes = to_msgpack(message, ext_dict=BaseMessage.EXT_DICT_REVERSED)
             if message.receiver is None:
                 self._node.shout(self.ZRE_GROUP, b"/raft " + message_bytes)
             else:

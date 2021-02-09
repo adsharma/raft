@@ -19,6 +19,7 @@ class BaseMessage:
         LogEntry = 4
 
     EXT_DICT = {}
+    EXT_DICT_REVERSED = {}
 
     sender: Union[int, str, uuid.UUID]  # int used only on tests
     receiver: Union[int, str, uuid.UUID, None]
@@ -30,6 +31,7 @@ class BaseMessage:
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
         cls.EXT_DICT[cls._type] = cls  # type: ignore
+        cls.EXT_DICT_REVERSED[cls] = cls._type  # type: ignore
 
     @property
     def type(self):
