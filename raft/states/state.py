@@ -97,7 +97,7 @@ class State:
     async def _accept_leader(self, message, timer: Optional[TimerHandle]):
         if self.leader != message.leader_id:
             self.leader = message.leader_id
-            logger.info(f"Accepted new leader: {self.leader}")
+            logger.info(f"{self._server.group}: Accepted new leader: {self.leader}")
 
             from raft.states.follower import Follower  # TODO: Fix circular import
 

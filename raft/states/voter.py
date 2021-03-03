@@ -46,7 +46,7 @@ class Voter(State):
         """This is called when the leader timeout is reached."""
         from .candidate import Candidate  # TODO: Fix circular import
 
-        logger.info(f"Lost Leader: {self.leader}")
+        logger.info(f"{self._server.group}: {self._server._name}: Lost Leader: {self.leader}")
 
         self.timer.cancel()
         self.leader = None

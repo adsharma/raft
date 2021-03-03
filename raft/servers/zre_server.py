@@ -19,15 +19,14 @@ logger = logging.getLogger("raft")
 class ZREServer(Server):
     "This implementation is suitable for multi-process testing"
 
-    ZRE_GROUP = "raft"
-
-    def __init__(self, name, state: State, node: Pyre, log=None, messageBoard=None):
+    def __init__(self, group, name, state: State, node: Pyre, log=None, messageBoard=None):
         if log is None:
             log = [LogEntry(term=0)]  # According to the raft spec
         if messageBoard is None:
             messageBoard = MemoryBoard()
 
         super().__init__(node.uuid().hex, state, log, messageBoard, [])
+        self.group = group
         self._node = node
         self._human_name = name
         self._outstanding_index = TTLCache(maxsize=128, ttl=10)
@@ -53,7 +52,7 @@ class ZREServer(Server):
         if isinstance(message, AppendEntriesMessage):
             self._outstanding_index[message.id] = message
         if isinstance(message, bytes):
-            self._node.shout(self.ZRE_GROUP, b"/raft " + message)
+            self._node.shout(self.group, b"/raft " + message)
         else:
             if message.receiver == self._name:
                 await self._receive_message(message)
@@ -61,7 +60,7 @@ class ZREServer(Server):
 
             message_bytes = to_msgpack(message, ext_dict=BaseMessage.EXT_DICT_REVERSED)
             if message.receiver is None:
-                self._node.shout(self.ZRE_GROUP, b"/raft " + message_bytes)
+                self._node.shout(self.group, b"/raft " + message_bytes)
             else:
                 if type(message.receiver) != str:
                     raise Exception(

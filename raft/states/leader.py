@@ -40,7 +40,7 @@ class Leader(State):
     def set_server(self, server):
         self._server = server
         self.leader = self._server._name
-        logger.info(f"{self._server._name}: New Leader")
+        logger.info(f"{self._server.group}: {self._server._name}: New Leader")
         loop = asyncio.get_event_loop()
         if not self.TEST_ONLY_DISABLE_SEND_LOOP:
             heart_beat_task = loop.create_task(self._send_heart_beat())
