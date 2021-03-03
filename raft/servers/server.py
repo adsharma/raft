@@ -27,6 +27,7 @@ class Server:
     _lastLogTerm: Optional[int] = None
 
     def __post_init__(self):
+        self.group = "raft"
         self._clear()
         self._state.set_server(self)
         self._messageBoard.set_owner(self)
