@@ -31,6 +31,7 @@ class Leader(State):
     def set_server(self, server):
         self._server = server
         self.leader = self._server._name
+        self.leader_name = self._server._human_name
         logger.info(f"{self._server.group}: {self._server._name}: New Leader")
         loop = asyncio.get_event_loop()
         if not self.TEST_ONLY_DISABLE_SEND_LOOP:

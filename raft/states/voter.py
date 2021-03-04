@@ -46,7 +46,18 @@ class Voter(State):
         """This is called when the leader timeout is reached."""
         from .candidate import Candidate  # TODO: Fix circular import
 
-        logger.info(f"{self._server.group}: {self._server._name}: Lost Leader: {self.leader}")
+        logger.info(
+            f"{self._server.group}: {self._server._name}: Lost Leader: {self.leader}"
+        )
+        if (
+            self._server._parent
+            and self._server._parent._state.leader_name != self._server._human_name
+        ):
+            logger.debug(
+                f"{self._server._name}: {self._server.group}:"
+                + f"not a leader in parent: {self._server._parent._state.leader_name} {self._server._human_name}"
+            )
+            return
 
         self.timer.cancel()
         self.leader = None

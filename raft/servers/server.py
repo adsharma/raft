@@ -25,9 +25,11 @@ class Server:
     _lastApplied: int = 0
     _lastLogIndex: int = 0
     _lastLogTerm: Optional[int] = None
+    _parent: Optional["Server"] = None
 
     def __post_init__(self):
         self.group = "raft"
+        self._human_name = self._name
         self._clear()
         self._state.set_server(self)
         self._messageBoard.set_owner(self)
@@ -68,6 +70,7 @@ class Server:
 
     async def quorum_set(self, neighbor: str, op: str) -> None:
         pass
+
 
 class ZeroMQServer(Server):
     "This implementation is suitable for single process testing"

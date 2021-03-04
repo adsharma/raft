@@ -19,7 +19,16 @@ logger = logging.getLogger("raft")
 class ZREServer(Server):
     "This implementation is suitable for multi-process testing"
 
-    def __init__(self, group, name, state: State, node: Pyre, log=None, messageBoard=None):
+    def __init__(
+        self,
+        group,
+        name,
+        state: State,
+        node: Pyre,
+        log=None,
+        messageBoard=None,
+        parent=None,
+    ):
         if log is None:
             log = [LogEntry(term=0)]  # According to the raft spec
         if messageBoard is None:
@@ -30,6 +39,13 @@ class ZREServer(Server):
         self._node = node
         self._human_name = name
         self._outstanding_index = TTLCache(maxsize=128, ttl=10)
+
+        # Sometimes several instances of consensus are arranged in a
+        # hierarchy. In order to become a candidate in the child consensus,
+        # you have to be a leader in the parent. Note that in the presence
+        # of failures, the parent and the child consensus could have
+        # different leaders at the same time.
+        self._parent = parent
 
     def add_neighbor(self, neighbor):
         loop = asyncio.get_event_loop()

@@ -17,6 +17,7 @@ class State:
     def __init__(self, timeout):
         self._timeout = timeout
         self.leader = None
+        self.leader_name = None
 
     def set_server(self, server: "Server"):
         self._server = server
