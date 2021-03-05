@@ -2,7 +2,7 @@ import time
 import uuid
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import Dict, Union
+from typing import Dict, Optional, Union
 
 from serde import deserialize, serialize
 
@@ -27,6 +27,7 @@ class BaseMessage:
     id: str = ""
     data: Union[int, str, Dict, None] = None
     timestamp: int = int(time.time())
+    group: Optional[str] = None
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
