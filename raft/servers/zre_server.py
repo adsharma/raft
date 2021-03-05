@@ -82,6 +82,7 @@ class ZREServer(Server):
                     raise Exception(
                         f"Expected node.uuid().hex here, got: {message.receiver}"
                     )
+                message.group = self.group  # Disambiguate in cases where a peer is in multiple groups
                 self._node.whisper(
                     uuid.UUID(message.receiver),  # type: ignore
                     b"/raft " + message_bytes,
@@ -95,6 +96,8 @@ class ZREServer(Server):
 
         except Exception as e:
             logger.info(f"Got exception: {e}")
+            return
+        if message.group is not None and message.group != self.group:
             return
         await self._receive_message(message)
 
