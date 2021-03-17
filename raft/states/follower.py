@@ -68,6 +68,9 @@ class Follower(Voter):
             log.append(e)
             self._server._commitIndex += 1
 
+        async with self._server._condition:
+            self._server._condition.notify_all()
+
         self._server._lastLogIndex = len(log) - 1
         self._server._lastLogTerm = log[-1].term
 

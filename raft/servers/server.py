@@ -33,6 +33,8 @@ class Server:
         self._clear()
         self._state.set_server(self)
         self._messageBoard.set_owner(self)
+        self._condition = asyncio.Condition()
+        self._condition_event: Optional[threading.Event] = None
 
     def _clear(self):
         self._total_nodes = len(self._neighbors) + 1

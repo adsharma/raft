@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import threading
 import uuid
 from typing import Union
 
@@ -116,7 +117,14 @@ class ZREServer(Server):
 
         self._state = state
 
-    async def set(self, key: str, value: str) -> None:
+    async def wait_for(self, expected_index) -> None:
+        def check_condition():
+            return self._commitIndex >= expected_index
+        async with self._condition:
+            await self._condition.wait_for(check_condition)
+            self._condition_event.set()
+
+    async def set(self, key: str, value: str):
         leader = self._state.leader
         if leader is not None:
             append_entries = AppendEntriesMessage(
@@ -132,8 +140,10 @@ class ZREServer(Server):
                     )
                 ],
             )
+            expected_index = self._commitIndex + 1
             await self.send_message(append_entries)
-            # TODO: wait for the leader to respond
+            self._condition_event = threading.Event()
+            return (self.wait_for, expected_index)
         else:
             raise Exception("Leader not found")
 

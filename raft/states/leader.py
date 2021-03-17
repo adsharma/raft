@@ -115,6 +115,8 @@ class Leader(State):
                     and new_commit_index > self._server._commitIndex
                 ):
                     self._server._commitIndex = new_commit_index
+                    async with self._server._condition:
+                        self._server._condition.notify_all()
 
         return self, None
 
