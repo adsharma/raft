@@ -1,8 +1,12 @@
 import asyncio
 import logging
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Any, List, Optional
 
+import dbm
+import os
+import random
+import threading
 import zmq
 import zmq.asyncio
 
@@ -20,6 +24,7 @@ class Server:
     _neighbors: List
 
     # Internal state
+    _stable_storage: Any
     _commitIndex: int = 0
     _currentTerm: int = 0
     _lastApplied: int = 0
@@ -31,10 +36,19 @@ class Server:
         self.group = "raft"
         self._human_name = self._name
         self._clear()
+        if not self._stable_storage:
+            # Use for unit test only
+            self._dbm_filename = f"/tmp/{self._name}-{random.randrange(1 << 32)}.db"
+            self._stable_storage = dbm.open(self._dbm_filename, "cs")
         self._state.set_server(self)
         self._messageBoard.set_owner(self)
         self._condition = asyncio.Condition()
         self._condition_event: Optional[threading.Event] = None
+
+    def __del__(self):
+        if self._dbm_filename is not None:
+            self._stable_storage.close()
+            os.unlink(self._dbm_filename)
 
     def _clear(self):
         self._total_nodes = len(self._neighbors) + 1
@@ -44,6 +58,7 @@ class Server:
         self._lastApplied = 0
         self._lastLogIndex = 0
         self._lastLogTerm = None
+        self._dbm_filename = None
 
     async def send_message(self, message):
         ...
@@ -87,7 +102,7 @@ class ZeroMQServer(Server):
         if messageBoard is None:
             messageBoard = MemoryBoard()
 
-        super().__init__(name, state, log, messageBoard, neighbors)
+        super().__init__(name, state, log, messageBoard, neighbors, _stable_storage=None)
         self._port = port
         self._stop = False
 

@@ -26,6 +26,8 @@ class ZREServer(Server):
         name,
         state: State,
         node: Pyre,
+        # DBM file that stores stable storage state for raft
+        stable_storage,
         log=None,
         messageBoard=None,
         parent=None,
@@ -35,7 +37,7 @@ class ZREServer(Server):
         if messageBoard is None:
             messageBoard = MemoryBoard()
 
-        super().__init__(node.uuid().hex, state, log, messageBoard, [])
+        super().__init__(node.uuid().hex, state, log, messageBoard, [], _stable_storage=stable_storage)
         self.group = group
         self._node = node
         self._human_name = name
