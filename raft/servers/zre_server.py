@@ -152,7 +152,7 @@ class ZREServer(Server):
     async def get(self, key: str):
         return await self._messageBoard.get(key)
 
-    async def quorum_set(self, neighbor: str, op: str) -> None:
+    async def quorum_set(self, neighbor: str, op: str):
         leader = self._state.leader
         if leader is not None:
             append_entries = AppendEntriesMessage(
@@ -169,8 +169,10 @@ class ZREServer(Server):
                     )
                 ],
             )
+            expected_index = self._commitIndex + 1
             await self.send_message(append_entries)
-            # TODO: wait for the leader to respond
+            self._condition_event = threading.Event()
+            return (self.wait_for, expected_index, append_entries.id)
         else:
             if self._currentTerm > 0:
                 raise Exception("Leader not found")
