@@ -37,7 +37,14 @@ class ZREServer(Server):
         if messageBoard is None:
             messageBoard = MemoryBoard()
 
-        super().__init__(node.uuid().hex, state, log, messageBoard, [], _stable_storage=stable_storage)
+        super().__init__(
+            node.uuid().hex,
+            state,
+            log,
+            messageBoard,
+            [],
+            _stable_storage=stable_storage,
+        )
         self.group = group
         self._node = node
         self._human_name = name
@@ -121,7 +128,11 @@ class ZREServer(Server):
 
     async def wait_for(self, expected_index, expected_id) -> None:
         def check_condition():
-            return self._commitIndex >= expected_index and self._log[expected_index].id == expected_id
+            return (
+                self._commitIndex >= expected_index
+                and self._log[expected_index].id == expected_id
+            )
+
         async with self._condition:
             await self._condition.wait_for(check_condition)
             self._condition_event.set()
