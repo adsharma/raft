@@ -1,4 +1,5 @@
 import logging
+from raft.messages.append_entries import AppendEntriesMessage
 
 from .config import FOLLOWER_TIMEOUT
 from .voter import Voter
@@ -10,6 +11,13 @@ class Follower(Voter):
     def __init__(self, timeout=FOLLOWER_TIMEOUT):
         super().__init__(timeout)
         self.leader = None
+
+    def _update_commit_index(self, message: AppendEntriesMessage) -> None:
+        if message.leader_commit > self._server._commitIndex:
+            # If the leader is too far ahead then we
+            #   use the length of the log - 1
+            log = self._server._log
+            self._server._commitIndex = min(message.leader_commit, max(0, len(log) - 1))
 
     async def on_append_entries(self, message):
         await super().on_append_entries(message)
@@ -23,6 +31,7 @@ class Follower(Voter):
 
         #   Is this a heartbeat?
         if len(message.entries) == 0:
+            self._update_commit_index(message)
             await self._send_response_message(message)
             return self, None
 
@@ -38,6 +47,7 @@ class Follower(Voter):
             self._server._lastLogIndex = message.prev_log_index
             self._server._lastLogTerm = log[-1].term if len(log) > 0 else 0
 
+            self._update_commit_index(message)
             await self._send_response_message(message, yes=False)
             return self, None
         # The induction proof held so lets check if the commitIndex
@@ -60,13 +70,13 @@ class Follower(Voter):
             self._server._log = log = log[: self._server._commitIndex + 1]
 
             if message.prev_log_index != (len(log) - 1):
+                self._update_commit_index(message)
                 await self._send_response_message(message, yes=False)
                 return self, None
 
         # Apply the log entries
         for e in message.entries:
             log.append(e)
-            self._server._commitIndex += 1
 
         async with self._server._condition:
             self._server._condition.notify_all()
@@ -74,11 +84,6 @@ class Follower(Voter):
         self._server._lastLogIndex = len(log) - 1
         self._server._lastLogTerm = log[-1].term
 
-        # Check if the leader is too far ahead in the log.
-        if message.leader_commit != self._server._commitIndex:
-            # If the leader is too far ahead then we
-            #   use the length of the log - 1
-            self._server._commitIndex = min(message.leader_commit, max(0, len(log) - 1))
-
+        self._update_commit_index(message)
         await self._send_response_message(message)
         return self, None
