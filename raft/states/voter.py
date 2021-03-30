@@ -10,7 +10,7 @@ logger = logging.getLogger("raft")
 class Voter(State):
     def __init__(self, timeout):
         super().__init__(timeout)
-        self._last_vote = None
+        self.last_vote = None
         self._timeout = timeout
         self.timer = self.restart_timer()
 
@@ -20,16 +20,16 @@ class Voter(State):
         return loop.call_later(self._timeoutTime, self.on_leader_timeout)
 
     async def on_vote_request(self, message):
-        if self._last_vote is not None:
-            last_vote_term, voted_for = self._last_vote
+        if self.last_vote is not None:
+            last_vote_term, voted_for = self.last_vote
             if message.term > last_vote_term:
-                self._last_vote = None
+                self.last_vote = None
         if (
-            self._last_vote is None
+            self.last_vote is None
             and message.last_log_index >= self._server._lastLogIndex
         ):
             # TODO: Put this on stable storage
-            self._last_vote = (message.term, message.sender)
+            self.last_vote = (message.term, message.sender)
             await self._send_vote_response_message(message)
         else:
             await self._send_vote_response_message(message, yes=False)

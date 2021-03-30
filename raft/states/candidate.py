@@ -54,4 +54,4 @@ class Candidate(Voter):
         # Vote for self
         await self._send_vote_response_message(election)
         await self._server.send_message(election)
-        self._last_vote = self._server._name
+        self.last_vote = (self._server._currentTerm, self._server._name)

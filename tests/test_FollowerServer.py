@@ -128,7 +128,7 @@ class TestFollowerServer(unittest.IsolatedAsyncioTestCase):
 
         await self.server.on_message(msg)
 
-        self.assertEqual((2, 0), self.server._state._last_vote)
+        self.assertEqual((2, 0), self.server._state.last_vote)
         msg = await self.oserver._messageBoard.get_message()
         self.assertEqual(True, msg.response)
 
@@ -140,7 +140,7 @@ class TestFollowerServer(unittest.IsolatedAsyncioTestCase):
         msg = RequestVoteMessage(2, 1, 2, {})
         await self.server.on_message(msg)
 
-        self.assertEqual((2, 0), self.server._state._last_vote)
+        self.assertEqual((2, 0), self.server._state.last_vote)
 
 
 if __name__ == "__main__":
