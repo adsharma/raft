@@ -1,6 +1,8 @@
 import asyncio
 import logging
 
+from typing import Optional, Tuple
+
 from ..messages.request_vote import RequestVoteResponseMessage
 from .state import State
 
@@ -10,9 +12,20 @@ logger = logging.getLogger("raft")
 class Voter(State):
     def __init__(self, timeout):
         super().__init__(timeout)
-        self.last_vote = None
+        self._last_vote = None
         self._timeout = timeout
         self.timer = self.restart_timer()
+
+    @property
+    def last_vote(self):
+        return self._last_vote
+
+    @last_vote.setter
+    def last_vote(self, value: Optional[Tuple[int, str]]):
+        if not self._server:
+            raise Exception(f"setting last vote without server")
+        self._server._stable_storage["last_vote"] = str(value)
+        self._last_vote = value
 
     def restart_timer(self):
         loop = asyncio.get_event_loop()
@@ -28,7 +41,6 @@ class Voter(State):
             self.last_vote is None
             and message.last_log_index >= self._server._lastLogIndex
         ):
-            # TODO: Put this on stable storage
             self.last_vote = (message.term, message.sender)
             await self._send_vote_response_message(message)
         else:

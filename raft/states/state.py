@@ -1,3 +1,4 @@
+import ast
 import logging
 import random
 from asyncio.events import TimerHandle
@@ -21,6 +22,13 @@ class State:
 
     def set_server(self, server: "Server"):
         self._server = server
+        db = self._server._stable_storage
+        if not "last_vote" in db:
+            if self._last_vote is None:
+                db["last_vote"] = str((self._server._currentTerm, None))
+            else:
+                db["last_vote"] = str(self._last_vote)
+        self._last_vote = ast.literal_eval(db["last_vote"].decode("utf-8"))
 
     async def on_message(self, message):
         """This method is called when a message is received,
