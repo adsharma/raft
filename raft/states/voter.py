@@ -33,6 +33,13 @@ class Voter(State):
         return loop.call_later(self._timeoutTime, self.on_leader_timeout)
 
     async def on_vote_request(self, message):
+        loop = asyncio.get_event_loop()
+        last_heart_beat = self.timer.when() - self._timeoutTime
+        time_since_heart_beat = loop.time() - last_heart_beat
+        if time_since_heart_beat < self._timeout and self.leader is not None:
+            # defence against disruptive removed servers. Raft section 6
+            await self._send_vote_response_message(message, yes=False)
+
         if self.last_vote is not None:
             last_vote_term, voted_for = self.last_vote
             if message.term > last_vote_term:
