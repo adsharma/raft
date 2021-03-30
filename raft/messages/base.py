@@ -44,3 +44,7 @@ class BaseMessage:
     @staticmethod
     def default() -> "BaseMessage":
         return BaseMessage(0, 0, 0, "", 0, 0)
+
+    def __post_init__(self):
+        if self.id == "":
+            self.id = uuid.uuid4().hex

@@ -119,9 +119,9 @@ class ZREServer(Server):
 
         self._state = state
 
-    async def wait_for(self, expected_index) -> None:
+    async def wait_for(self, expected_index, expected_id) -> None:
         def check_condition():
-            return self._commitIndex >= expected_index
+            return self._commitIndex >= expected_index and self._log[expected_index].id == expected_id
         async with self._condition:
             await self._condition.wait_for(check_condition)
             self._condition_event.set()
@@ -145,7 +145,7 @@ class ZREServer(Server):
             expected_index = self._commitIndex + 1
             await self.send_message(append_entries)
             self._condition_event = threading.Event()
-            return (self.wait_for, expected_index)
+            return (self.wait_for, expected_index, append_entries.id)
         else:
             raise Exception("Leader not found")
 

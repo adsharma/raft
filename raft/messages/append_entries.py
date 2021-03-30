@@ -23,6 +23,7 @@ class LogEntry:
 
     term: int
     index: int = 0
+    id: str = ""
     command: Command = Command.PUT
     key: Union[int, str, None] = None
     value: Union[int, str, None] = None
@@ -43,7 +44,3 @@ class AppendEntriesMessage(BaseMessage):
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
         BaseMessage.EXT_DICT[LogEntry._type] = LogEntry  # type: ignore
-
-    def __post_init__(self):
-        if self.id == "":
-            self.id = uuid.uuid4().hex

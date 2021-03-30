@@ -59,6 +59,7 @@ class Leader(State):
             self._server._currentTerm += 1
 
         for entry in message.entries:
+            entry.id = message.id
             self._server._log.append(entry)
             self._server._lastLogIndex = len(self._server._log) - 1
             self._server._lastLogTerm = entry.term = self._server._currentTerm
