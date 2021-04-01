@@ -122,6 +122,13 @@ class Leader(State):
         return self, None
 
     async def _send_one_heart_beat(self):
+        parent_raft = self._server._parent
+        if parent_raft is not None:
+            if parent_raft._state.leader_name != self._server._human_name:
+                loop = asyncio.get_event_loop()
+                loop.call_soon(self.on_leader_timeout)
+                return
+
         message = AppendEntriesMessage(
             self._server._name,
             None,
