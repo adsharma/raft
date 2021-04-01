@@ -106,6 +106,10 @@ class State:
             logger.info(f"{self._server.group}: Accepted new leader: {self.leader}")
 
             from raft.states.follower import Follower  # TODO: Fix circular import
+            from raft.states.learner import Learner  # TODO: Fix circular import
+
+            if isinstance(self, Learner):
+                return self, None
 
             if not isinstance(self, Follower):
                 if timer is not None:
