@@ -5,7 +5,7 @@ from typing import List, Optional, Union
 
 from serde import deserialize, serialize
 
-from .base import BaseMessage
+from .base import BaseMessage, Term
 
 
 class Command(IntEnum):
@@ -21,7 +21,7 @@ class Command(IntEnum):
 class LogEntry:
     _type = BaseMessage.MessageType.LogEntry
 
-    term: int
+    term: int  # TODO: Change to Term
     index: int = 0
     id: str = ""
     command: Command = Command.PUT

@@ -2,9 +2,12 @@ import time
 import uuid
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import Dict, Optional, Union
+from typing import Dict, Optional, NewType, Union
 
 from serde import deserialize, serialize
+
+Term = NewType("Term", int)
+Peer = Union[int, str, uuid.UUID]  # int used only on tests
 
 
 @deserialize
@@ -21,9 +24,9 @@ class BaseMessage:
     EXT_DICT = {}
     EXT_DICT_REVERSED = {}
 
-    sender: Union[int, str, uuid.UUID]  # int used only on tests
-    receiver: Union[int, str, uuid.UUID, None]
-    term: int
+    sender: Peer
+    receiver: Optional[Peer]
+    term: int  # TODO: Change to Term
     id: str = ""
     data: Union[int, str, Dict, None] = None
     timestamp: int = int(time.time())
@@ -43,7 +46,7 @@ class BaseMessage:
 
     @staticmethod
     def default() -> "BaseMessage":
-        return BaseMessage(0, 0, 0, "", 0, 0)
+        return BaseMessage(0, 0, Term(0), "", 0, 0)
 
     def __post_init__(self):
         if self.id == "":

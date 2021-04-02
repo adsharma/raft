@@ -1,7 +1,9 @@
 import asyncio
 import logging
 
+from ..messages.base import Term
 from ..messages.request_vote import RequestVoteMessage, RequestVoteResponseMessage
+from ..servers.server import Server
 from .config import CANDIDATE_TIMEOUT
 from .leader import Leader
 from .voter import Voter
@@ -14,13 +16,13 @@ class Candidate(Voter):
         super().__init__(timeout)
         self.leader = None
 
-    def set_server(self, server):
+    def set_server(self, server: Server):
         self._server = server
         self._votes = {}
         loop = asyncio.get_event_loop()
         return loop.create_task(self._start_election())
 
-    async def on_vote_request(self, message):
+    async def on_vote_request(self, message: RequestVoteMessage):
         return self, None
 
     async def on_vote_received(self, message: RequestVoteResponseMessage):
@@ -42,7 +44,7 @@ class Candidate(Voter):
         return self, None
 
     async def _start_election(self):
-        self._server._currentTerm += 1
+        self._server._currentTerm = Term(1 + self._server._currentTerm)
         election = RequestVoteMessage(
             self._server._name,
             None,

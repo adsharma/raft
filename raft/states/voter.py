@@ -3,16 +3,18 @@ import logging
 
 from typing import Optional, Tuple
 
-from ..messages.request_vote import RequestVoteResponseMessage
+from ..messages.base import Peer
+from ..messages.append_entries import AppendEntriesMessage
+from ..messages.request_vote import RequestVoteMessage, RequestVoteResponseMessage
 from .state import State
 
 logger = logging.getLogger("raft")
 
 
 class Voter(State):
-    def __init__(self, timeout):
+    def __init__(self, timeout: float):
         super().__init__(timeout)
-        self._last_vote = None
+        self._last_vote = (0, "")
         self._timeout = timeout
         self.timer = self.restart_timer()
 
@@ -21,7 +23,7 @@ class Voter(State):
         return self._last_vote
 
     @last_vote.setter
-    def last_vote(self, value: Optional[Tuple[int, str]]):
+    def last_vote(self, value: Tuple[int, Peer]):
         if not self._server:
             raise Exception(f"setting last vote without server")
         self._server._stable_storage["last_vote"] = str(value)
@@ -32,7 +34,7 @@ class Voter(State):
         self._timeoutTime = self._nextTimeout()
         return loop.call_later(self._timeoutTime, self.on_leader_timeout)
 
-    async def on_vote_request(self, message):
+    async def on_vote_request(self, message: RequestVoteMessage):
         loop = asyncio.get_event_loop()
         last_heart_beat = self.timer.when() - self._timeoutTime
         time_since_heart_beat = loop.time() - last_heart_beat
@@ -40,14 +42,9 @@ class Voter(State):
             # defence against disruptive removed servers. Raft section 6
             await self._send_vote_response_message(message, yes=False)
 
-        if self.last_vote is not None:
-            last_vote_term, voted_for = self.last_vote
-            if message.term > last_vote_term:
-                self.last_vote = None
-        if (
-            self.last_vote is None
-            and message.last_log_index >= self._server._lastLogIndex
-        ):
+        last_vote_term, voted_for = self.last_vote
+        eligible_to_vote = message.term > last_vote_term
+        if eligible_to_vote and message.last_log_index >= self._server._lastLogIndex:
             self.last_vote = (message.term, message.sender)
             await self._send_vote_response_message(message)
         else:
@@ -55,7 +52,7 @@ class Voter(State):
 
         return self, None
 
-    async def _send_vote_response_message(self, msg, yes=True):
+    async def _send_vote_response_message(self, msg: RequestVoteMessage, yes=True):
         voteResponse = RequestVoteResponseMessage(
             self._server._name, msg.sender, msg.term, response=yes
         )
@@ -86,7 +83,7 @@ class Voter(State):
 
         return candidate, None
 
-    async def on_append_entries(self, message):
+    async def on_append_entries(self, message: AppendEntriesMessage):
         self._timeoutTime = self._nextTimeout()
         self.timer.cancel()
         self.timer = self.restart_timer()

@@ -1,9 +1,14 @@
 import asyncio
 import logging
+from typing import Optional
 import statistics
 from collections import defaultdict
 
 from ..messages.append_entries import AppendEntriesMessage, Command
+from ..messages.base import BaseMessage, Peer, Term
+from ..messages.request_vote import RequestVoteResponseMessage
+from ..messages.response import ResponseMessage
+from ..servers.server import Server
 from .config import HEART_BEAT_INTERVAL, SEND_ENTRIES_INTERVAL
 from .state import State
 
@@ -28,7 +33,7 @@ class Leader(State):
             f"Leader:\n\tnextIndex: {self._nextIndex}\n\tmatchIndex: {self._matchIndex}"
         )
 
-    def set_server(self, server):
+    def set_server(self, server: Server):
         self._server = server
         self.leader = self._server._name
         self.leader_name = self._server._human_name
@@ -56,7 +61,7 @@ class Leader(State):
             len(message.entries) == 1
             and message.entries[0].command == Command.QUORUM_PUT
         ):
-            self._server._currentTerm += 1
+            self._server._currentTerm = Term(1 + self._server._currentTerm)
 
         for entry in message.entries:
             entry.id = message.id
@@ -66,9 +71,13 @@ class Leader(State):
             entry.index = self._server._lastLogIndex
         return self, None
 
-    async def on_response_received(self, message, test_original_message=None):
+    async def on_response_received(
+        self,
+        message: ResponseMessage,
+        test_original_message: Optional[AppendEntriesMessage] = None,
+    ):
         original_message = None
-        if hasattr(self._server, "_outstanding_index"):
+        if self._server._outstanding_index is not None:
             if message.id in self._server._outstanding_index:
                 original_message = self._server._outstanding_index[message.id]
                 num_entries = len(original_message.entries)
@@ -159,7 +168,7 @@ class Leader(State):
 
         asyncio.create_task(schedule_another_beat())
 
-    async def _send_entries(self, peer, num: int):
+    async def _send_entries(self, peer: Peer, num: int):
         prev_log_index = max(0, self._nextIndex[peer] - 1)
         message = AppendEntriesMessage(
             self._server._name,

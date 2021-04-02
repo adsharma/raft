@@ -3,14 +3,14 @@
 import unittest
 
 from raft.messages.append_entries import AppendEntriesMessage, LogEntry
-from raft.messages.base import BaseMessage
+from raft.messages.base import BaseMessage, Term
 from serde.msgpack import from_msgpack, to_msgpack
 
 
 class TestSerde(unittest.TestCase):
     def test_serde(self):
         message = AppendEntriesMessage(
-            "test", "foo", 0, entries=[LogEntry(term=0, index=0)]
+            "test", "foo", Term(0), entries=[LogEntry(term=Term(0), index=0)]
         )
         message_bytes = to_msgpack(message, ext_dict=BaseMessage.EXT_DICT_REVERSED)
         decoded_message = from_msgpack(

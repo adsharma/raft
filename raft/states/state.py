@@ -6,6 +6,8 @@ from typing import TYPE_CHECKING, Optional
 
 from ..messages.base import BaseMessage
 from ..messages.response import ResponseMessage
+from ..messages.append_entries import AppendEntriesMessage
+from ..messages.request_vote import RequestVoteResponseMessage, RequestVoteMessage
 
 if TYPE_CHECKING:
     from ..servers.server import Server
@@ -59,37 +61,33 @@ class State:
         else:
             raise Exception(f"Unknown message type: {type(message)}")
 
-    async def on_leader_timeout(self, message):
+    async def on_leader_timeout(self):
         """This is called when the leader timeout is reached."""
         return self, None
 
-    async def on_vote_request(self, message):
+    async def on_vote_request(self, message: RequestVoteMessage):
         """This is called when there is a vote request."""
         return self, None
 
-    async def on_vote_received(self, message):
+    async def on_vote_received(self, message: RequestVoteResponseMessage):
         """This is called when this node recieves a vote."""
         return self, None
 
-    async def on_append_entries(self, message):
+    async def on_append_entries(self, message: AppendEntriesMessage):
         """This is called when there is a request to
         append an entry to the log.
 
         """
         return self, None
 
-    async def on_response_received(self, message):
+    async def on_response_received(self, message: ResponseMessage):
         """This is called when a response is sent back to the Leader"""
-        return self, None
-
-    async def on_client_command(self, message):
-        """This is called when there is a client request."""
         return self, None
 
     def _nextTimeout(self):
         return random.randrange(self._timeout, 2 * self._timeout)
 
-    async def _send_response_message(self, msg, yes=True):
+    async def _send_response_message(self, msg: BaseMessage, yes=True):
         response = ResponseMessage(
             self._server._name,
             msg.sender,

@@ -1,5 +1,7 @@
 import logging
-from raft.messages.append_entries import AppendEntriesMessage
+
+from ..messages.append_entries import AppendEntriesMessage
+from ..messages.base import Term
 
 from .config import FOLLOWER_TIMEOUT
 from .voter import Voter
@@ -19,7 +21,7 @@ class Follower(Voter):
             log = self._server._log
             self._server._commitIndex = min(message.leader_commit, max(0, len(log) - 1))
 
-    async def on_append_entries(self, message):
+    async def on_append_entries(self, message: AppendEntriesMessage):
         await super().on_append_entries(message)
         log = self._server._log
 
@@ -45,7 +47,7 @@ class Follower(Voter):
             logger.debug(f"trimming to {message.prev_log_index}")
             self._server._log = log = log[: message.prev_log_index]
             self._server._lastLogIndex = message.prev_log_index
-            self._server._lastLogTerm = log[-1].term if len(log) > 0 else 0
+            self._server._lastLogTerm = log[-1].term if len(log) > 0 else Term(0)
 
             self._update_commit_index(message)
             await self._send_response_message(message, yes=False)

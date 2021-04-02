@@ -1,16 +1,18 @@
 import asyncio
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, List, Optional
 
 import dbm
 import os
 import random
 import threading
+from cachetools.ttl import TTLCache
 import zmq
 import zmq.asyncio
 
 from ..boards.memory_board import Board, MemoryBoard
+from ..messages.base import Term, Peer
 from ..messages.append_entries import LogEntry
 from ..states.state import State
 
@@ -20,17 +22,18 @@ class Server:
     _name: str
     _state: State
     _log: List
-    _messageBoard: Board
+    _messageBoard: Board = field(repr=False)
     _neighbors: List
 
     # Internal state
-    _stable_storage: Any
+    _stable_storage: Any = field(repr=False)
     _commitIndex: int = 0
-    _currentTerm: int = 0
+    _currentTerm: Term = Term(0)
     _lastApplied: int = 0
     _lastLogIndex: int = 0
-    _lastLogTerm: Optional[int] = None
-    _parent: Optional["Server"] = None
+    _lastLogTerm: Term = Term(0)
+    _outstanding_index: Optional[TTLCache] = field(default=None, repr=False)
+    _parent: Optional["Server"] = field(default=None, repr=False)
 
     def __post_init__(self):
         self.group = "raft"
@@ -54,10 +57,10 @@ class Server:
         self._total_nodes = len(self._neighbors) + 1
         self._log = [LogEntry(term=0)]  # Dummy node per raft spec
         self._commitIndex = 0
-        self._currentTerm = 0
+        self._currentTerm = Term(0)
         self._lastApplied = 0
         self._lastLogIndex = 0
-        self._lastLogTerm = None
+        self._lastLogTerm = Term(0)
         self._dbm_filename = None
 
     async def send_message(self, message):
@@ -102,7 +105,9 @@ class ZeroMQServer(Server):
         if messageBoard is None:
             messageBoard = MemoryBoard()
 
-        super().__init__(name, state, log, messageBoard, neighbors, _stable_storage=None)
+        super().__init__(
+            name, state, log, messageBoard, neighbors, _stable_storage=None
+        )
         self._port = port
         self._stop = False
 
