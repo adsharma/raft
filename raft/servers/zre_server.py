@@ -10,7 +10,7 @@ from serde.msgpack import from_msgpack, to_msgpack
 
 from ..boards.memory_board import MemoryBoard
 from ..messages.append_entries import AppendEntriesMessage, LogEntry, Command
-from ..messages.base import BaseMessage
+from ..messages.base import BaseMessage, Peer
 from ..states.state import State
 from .server import Server
 
@@ -57,16 +57,16 @@ class ZREServer(Server):
         # different leaders at the same time.
         self._parent = parent
 
-    def add_neighbor(self, neighbor):
+    def add_neighbor(self, neighbor: Peer):
         loop = asyncio.get_event_loop()
-        task = loop.create_task(self.quorum_set(neighbor, "add"))
+        task = loop.create_task(self.quorum_set(str(neighbor), "add"))
         self._neighbors.append(neighbor)
         self._total_nodes = len(self._neighbors) + 1
         return task
 
-    def remove_neighbor(self, neighbor):
+    def remove_neighbor(self, neighbor: Peer):
         loop = asyncio.get_event_loop()
-        task = loop.create_task(self.quorum_set(neighbor, "remove"))
+        task = loop.create_task(self.quorum_set(str(neighbor), "remove"))
         self._neighbors.remove(neighbor)
         self._total_nodes = len(self._neighbors) + 1
         return task

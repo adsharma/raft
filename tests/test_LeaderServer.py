@@ -24,15 +24,15 @@ class TestLeaderServer(unittest.IsolatedAsyncioTestCase):
         self.leader = Server(0, state, [], board, followers)
 
         for i in followers:
-            i._neighbors.append(self.leader)
+            i.add_neighbor(self.leader)
 
         # Consume the heart beat message sent from set_server()
-        for i in self.leader._neighbors:
+        for i in self.leader._all_neighbors.values():
             await i.on_message(await i._messageBoard.get_message())
 
     async def _perform_heart_beat(self):
         await self.leader._state._send_heart_beat()
-        for i in self.leader._neighbors:
+        for i in self.leader._all_neighbors.values():
             await i.on_message(await i._messageBoard.get_message())
 
         for _, i in self.leader._messageBoard._board._queue:
@@ -54,19 +54,19 @@ class TestLeaderServer(unittest.IsolatedAsyncioTestCase):
 
         await self.leader.send_message(msg)
 
-        for i in self.leader._neighbors:
+        for i in self.leader._all_neighbors.values():
             await i.on_message(await i._messageBoard.get_message())
 
-        for i in self.leader._neighbors:
+        for i in self.leader._all_neighbors.values():
             self.assertEqual([LogEntry(term=0), LogEntry(term=1, value=100)], i._log)
 
     async def test_leader_server_sends_appendentries_to_all_neighbors_but_some_have_dirtied_logs(
         self
     ):
-
-        self.leader._neighbors[0]._log.append(LogEntry(term=1, index=1, value=100))
-        self.leader._neighbors[0]._log.append(LogEntry(term=2, index=0, value=200))
-        self.leader._neighbors[0]._log.append(LogEntry(term=3, index=0, value=200))
+        n0 = self.leader.get_neighbor(self.leader._neighbors[0])
+        n0._log.append(LogEntry(term=1, index=1, value=100))
+        n0._log.append(LogEntry(term=2, index=0, value=200))
+        n0._log.append(LogEntry(term=3, index=0, value=200))
         self.leader._log.append(LogEntry(term=1, index=1, value=100))
 
         await self._perform_heart_beat()
@@ -77,10 +77,10 @@ class TestLeaderServer(unittest.IsolatedAsyncioTestCase):
 
         await self.leader.send_message(msg)
 
-        for i in self.leader._neighbors:
+        for i in self.leader._all_neighbors.values():
             await i.on_message(await i._messageBoard.get_message())
 
-        for i in self.leader._neighbors:
+        for i in self.leader._all_neighbors.values():
             self.assertEqual([LogEntry(term=0), LogEntry(term=1, value=100)], i._log)
 
     async def test_timeout(self):
@@ -104,15 +104,15 @@ class TestLeaderServerRaftPDF(unittest.IsolatedAsyncioTestCase):
         self.leader = Server(0, state, [], board, followers)
 
         for i in followers:
-            i._neighbors.append(self.leader)
+            i.add_neighbor(self.leader)
 
         # Consume the heart beat message sent from set_server()
-        for i in self.leader._neighbors:
+        for i in self.leader._all_neighbors.values():
             await i.on_message(await i._messageBoard.get_message())
 
     async def _perform_heart_beat(self):
         await self.leader._state._send_heart_beat()
-        for i in self.leader._neighbors:
+        for i in self.leader._all_neighbors.values():
             await i.on_message(await i._messageBoard.get_message())
 
         for _, i in self.leader._messageBoard._board._queue:
@@ -126,11 +126,13 @@ class TestLeaderServerRaftPDF(unittest.IsolatedAsyncioTestCase):
         log_entry_index1 = LogEntry(term=1, index=1, value=1)
         leader._log.append(log_entry_index1)
         for i in range(4):
-            leader._neighbors[i]._log.append(log_entry_index1)
+            n_i = self.leader.get_neighbor(self.leader._neighbors[i])
+            n_i._log.append(log_entry_index1)
             leader._state._nextIndex[i] = 1
             leader._state._matchIndex[i] = 1
 
-        leader._neighbors[3]._log.append(LogEntry(term=3, index=2, value=3))
+        n_3 = self.leader.get_neighbor(self.leader._neighbors[3])
+        n_3._log.append(LogEntry(term=3, index=2, value=3))
         leader._lastLogIndex = 1
         leader._lastLogTerm = 1
 
@@ -156,7 +158,9 @@ class TestLeaderServerRaftPDF(unittest.IsolatedAsyncioTestCase):
         await leader.send_message(msg)
 
         for i in leader._neighbors[0:3]:
-            await i.on_message(await i._messageBoard.get_message())
+            iserver = leader.get_neighbor(i)
+            if iserver is not None:
+                await iserver.on_message(await iserver._messageBoard.get_message())
 
         leader._commitIndex = 1
         leader._currentTerm = 4

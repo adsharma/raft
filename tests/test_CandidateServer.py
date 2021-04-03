@@ -13,8 +13,8 @@ class TestCandidateServer(unittest.IsolatedAsyncioTestCase):
         self.oserver = Server(0, Follower())
         self.server = Server(1, Follower())
 
-        self.server._neighbors.append(self.oserver)
-        self.oserver._neighbors.append(self.server)
+        self.server.add_neighbor(self.oserver)
+        self.oserver.add_neighbor(self.server)
 
         candidate = Candidate()
         self.server._state = candidate
@@ -41,11 +41,11 @@ class TestCandidateServer(unittest.IsolatedAsyncioTestCase):
 
         server = Server(2, Candidate())
 
-        server._neighbors.append(oserver)
-        server._neighbors.append(server0)
+        server.add_neighbor(oserver)
+        server.add_neighbor(server0)
 
-        server0._neighbors.append(server)
-        oserver._neighbors.append(server)
+        server0.add_neighbor(server)
+        oserver.add_neighbor(server)
 
         await server._state._start_election()
 
@@ -71,13 +71,13 @@ class TestCandidateServer(unittest.IsolatedAsyncioTestCase):
         await c1._state._start_election()
 
         for i in range(2):
-            followers[i]._neighbors.append(c0)
+            followers[i].add_neighbor(c0)
             await followers[i].on_message(
                 await followers[i]._messageBoard.get_message()
             )
 
         for i in range(2, 4):
-            followers[i]._neighbors.append(c1)
+            followers[i].add_neighbor(c1)
             await followers[i].on_message(
                 await followers[i]._messageBoard.get_message()
             )
@@ -104,13 +104,13 @@ class TestCandidateServer(unittest.IsolatedAsyncioTestCase):
         await c1._state._start_election()
 
         for i in range(2):
-            followers[i]._neighbors.append(c0)
+            followers[i].add_neighbor(c0)
             await followers[i].on_message(
                 await followers[i]._messageBoard.get_message()
             )
 
         for i in range(2, 6):
-            followers[i]._neighbors.append(c1)
+            followers[i].add_neighbor(c1)
             await followers[i].on_message(
                 await followers[i]._messageBoard.get_message()
             )

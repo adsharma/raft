@@ -45,9 +45,6 @@ class Leader(State):
             heart_beat_task = loop.create_task(self._send_one_heart_beat())
 
         for n in self._server._neighbors:
-            # With ZeroMQServer we use n.name, but for ZREServer, neighbor is an id
-            if hasattr(n, "_name"):
-                n = n._name
             self._nextIndex[n] = self._server._lastLogIndex + 1
             self._matchIndex[n] = 0
 
@@ -155,10 +152,7 @@ class Leader(State):
         if write_initial_quorum:
             await self._server.quorum_set(self.leader, "add")
             for n in self._server._neighbors:
-                # With ZeroMQServer we use n.name, but for ZREServer, neighbor is an id
-                if hasattr(n, "_name"):
-                    n = n._name
-                await self._server.quorum_set(n, "add")
+                await self._server.quorum_set(str(n), "add")
 
         await self._send_one_heart_beat()
 
@@ -187,10 +181,6 @@ class Leader(State):
     async def append_entries_loop(self):
         while True:
             for n in self._server._neighbors:
-                # With ZeroMQServer we use n.name, but for ZREServer, neighbor is an id
-                if hasattr(n, "_name"):
-                    n = n._name
-                # With ZeroMQServer we use n.name, but for ZREServer, neighbor is an id
                 last_log_index = self._server._lastLogIndex
                 if self._nextIndex[n] <= last_log_index and last_log_index > 0:
                     num = last_log_index - self._nextIndex[n] + 1

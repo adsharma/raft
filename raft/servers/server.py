@@ -23,7 +23,7 @@ class Server:
     _state: State
     _log: List
     _messageBoard: Board = field(repr=False)
-    _neighbors: List
+    _neighbors: List[Peer]
 
     # Internal state
     _stable_storage: Any = field(repr=False)
@@ -42,7 +42,9 @@ class Server:
         if not self._stable_storage:
             # Use for unit test only
             self._dbm_filename = f"/tmp/{self._name}-{random.randrange(1 << 32)}.db"
-            self._stable_storage = dbm.open(self._dbm_filename, "cs")
+            self._stable_storage = dbm.open(
+                self._dbm_filename, "cs"  # type: ignore (typeshed#5175)
+            )
         self._state.set_server(self)
         self._messageBoard.set_owner(self)
         self._condition = asyncio.Condition()
@@ -81,10 +83,12 @@ class Server:
         ...
 
     def add_neighbor(self, neighbor):
+        ...
         self._neighbors.append(neighbor)
         self._total_nodes = len(self._neighbors) + 1
 
     def remove_neighbor(self, neighbor):
+        ...
         self._neighbors.remove(neighbor)
         self._total_nodes = len(self._neighbors) + 1
 
@@ -96,7 +100,13 @@ class ZeroMQServer(Server):
     "This implementation is suitable for single process testing"
 
     def __init__(
-        self, name, state: State, log=None, messageBoard=None, neighbors=None, port=0
+        self,
+        name,
+        state: State,
+        log=None,
+        messageBoard=None,
+        neighbors: List["ZeroMQServer"] = None,
+        port=0,
     ):
         if log is None:
             log = []
@@ -104,18 +114,40 @@ class ZeroMQServer(Server):
             neighbors = []
         if messageBoard is None:
             messageBoard = MemoryBoard()
+        self._all_neighbors = {}
+        for n in neighbors:
+            self._all_neighbors[n._name] = n
 
         super().__init__(
-            name, state, log, messageBoard, neighbors, _stable_storage=None
+            name,
+            state,
+            log,
+            messageBoard,
+            list(self._all_neighbors.keys()),
+            _stable_storage=None,
         )
         self._port = port
         self._stop = False
+
+    def add_neighbor(self, neighbor: "ZeroMQServer"):
+        self._all_neighbors[neighbor._name] = neighbor
+        self._neighbors.append(neighbor._name)
+        self._total_nodes = len(self._neighbors) + 1
+
+    def remove_neighbor(self, neighbor: "ZeroMQServer"):
+        self._neighbors.remove(neighbor._name)
+        del self._all_neighbors[neighbor._name]
+        self._total_nodes = len(self._neighbors) + 1
+
+    def get_neighbor(self, name) -> Optional["ZeroMQServer"]:
+        return self._all_neighbors.get(name, None)
 
     async def subscriber(self):
         logger = logging.getLogger("raft")
         context = zmq.asyncio.Context()
         socket = context.socket(zmq.SUB)
-        for n in self._neighbors:
+        for n_id in self._neighbors:
+            n = self._all_neighbors[n_id]
             socket.connect("tcp://%s:%d" % (n._name, n._port))
 
         while not self._stop:
@@ -159,17 +191,19 @@ class ZeroMQServer(Server):
 
     async def send_message(self, message):
         if message.receiver is None:
-            for n in self._neighbors:
+            for n_id in self._neighbors:
+                n = self._all_neighbors[n_id]
                 message._receiver = n._name
                 await n.post_message(message)
         else:
-            for n in self._neighbors:
+            for n_id in self._neighbors:
+                n = self._all_neighbors[n_id]
                 if n._name == message.receiver:
                     await n.post_message(message)
                     break
 
     async def receive_message(self, message):
-        n = [n for n in self._neighbors if n._name == message.receiver]
+        n = [n for n in self._all_neighbors.values() if n._name == message.receiver]
         if len(n) > 0:
             await n[0].post_message(message)
 

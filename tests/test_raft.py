@@ -66,7 +66,7 @@ class TestRaft(unittest.IsolatedAsyncioTestCase):
 
     async def _perform_heart_beat(self):
         await self.leader._state._send_heart_beat()
-        for i in self.leader._neighbors:
+        for i in self.leader._all_neighbors.values():
             await i.on_message(await i._messageBoard.get_message())
 
         for i in self.leader._messageBoard:
@@ -86,18 +86,20 @@ class TestRaft(unittest.IsolatedAsyncioTestCase):
 
         await self.leader.send_message(msg)
 
-        for i in self.leader._neighbors:
+        for i in self.leader._all_neighbors.values():
             await i.on_message(await i._messageBoard.get_message())
 
-        for i in self.leader._neighbors:
+        for i in self.leader._all_neighbors.values():
             self.assertEqual(
                 [LogEntry(term=0), LogEntry(term=1, index=1, value=100)], i._log
             )
 
     async def test_dirty(self):
-        self.leader._neighbors[0]._log.append(LogEntry(term=1, index=1, value=100))
-        self.leader._neighbors[0]._log.append(LogEntry(term=2, index=2, value=200))
-        self.leader._neighbors[1]._log.append(LogEntry(term=3, index=1, value=200))
+        n0 = self.leader.get_neighbor(self.leader._neighbors[0])
+        n1 = self.leader.get_neighbor(self.leader._neighbors[1])
+        n0._log.append(LogEntry(term=1, index=1, value=100))
+        n0._log.append(LogEntry(term=2, index=2, value=200))
+        n1._log.append(LogEntry(term=3, index=1, value=200))
         self.leader._log.append(LogEntry(term=1, index=1, value=100))
 
         await self._perform_heart_beat()
@@ -108,10 +110,10 @@ class TestRaft(unittest.IsolatedAsyncioTestCase):
 
         await self.leader.send_message(msg)
 
-        for i in self.leader._neighbors:
+        for i in self.leader._all_neighbors.values():
             await i.on_message(await i._messageBoard.get_message())
 
-        for i in self.leader._neighbors:
+        for i in self.leader._all_neighbors.values():
             self.assertEqual([LogEntry(term=0), LogEntry(term=1, value=100)], i._log)
 
 
