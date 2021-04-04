@@ -56,6 +56,7 @@ class Server:
             os.unlink(self._dbm_filename)
 
     def _clear(self):
+        self._quorum = set()
         self._total_nodes = len(self._neighbors) + 1
         self._log = [LogEntry(term=0)]  # Dummy node per raft spec
         self._commitIndex = 0
@@ -84,13 +85,9 @@ class Server:
 
     def add_neighbor(self, neighbor):
         ...
-        self._neighbors.append(neighbor)
-        self._total_nodes = len(self._neighbors) + 1
 
     def remove_neighbor(self, neighbor):
         ...
-        self._neighbors.remove(neighbor)
-        self._total_nodes = len(self._neighbors) + 1
 
     async def quorum_set(self, neighbor: str, op: str) -> None:
         pass
@@ -132,10 +129,12 @@ class ZeroMQServer(Server):
     def add_neighbor(self, neighbor: "ZeroMQServer"):
         self._all_neighbors[neighbor._name] = neighbor
         self._neighbors.append(neighbor._name)
+        self._quorum.add(neighbor._name)
         self._total_nodes = len(self._neighbors) + 1
 
     def remove_neighbor(self, neighbor: "ZeroMQServer"):
         self._neighbors.remove(neighbor._name)
+        self._quorum.remove(neighbor._name)
         del self._all_neighbors[neighbor._name]
         self._total_nodes = len(self._neighbors) + 1
 

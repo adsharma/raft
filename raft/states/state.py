@@ -21,6 +21,7 @@ class State:
         self._timeout = timeout
         self.leader = None
         self.leader_name = None
+        self.learner = False
 
     def set_server(self, server: "Server"):
         self._server = server
@@ -96,6 +97,8 @@ class State:
             response=yes,
             current_term=self._server._currentTerm,
         )
+        if self.learner:
+            response.role = ResponseMessage.Role.LEARNER
         await self._server.send_message(response)
 
     async def _accept_leader(self, message, timer: Optional[TimerHandle]):

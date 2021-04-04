@@ -28,6 +28,9 @@ class Candidate(Voter):
     async def on_vote_received(self, message: RequestVoteResponseMessage):
         if message.sender not in self._votes and message.response:
             self._votes[message.sender] = message
+            if message.sender not in self._server._quorum:
+                # TODO: more checks here if the network is not trusted
+                self._server._quorum.add(message.sender)
 
             num_votes = len(self._votes.keys())
             total_nodes = self._server._total_nodes

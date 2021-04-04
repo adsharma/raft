@@ -61,14 +61,16 @@ class ZREServer(Server):
         loop = asyncio.get_event_loop()
         task = loop.create_task(self.quorum_set(str(neighbor), "add"))
         self._neighbors.append(neighbor)
-        self._total_nodes = len(self._neighbors) + 1
+        self._total_nodes = len(self._quorum) + 1
         return task
 
     def remove_neighbor(self, neighbor: Peer):
         loop = asyncio.get_event_loop()
         task = loop.create_task(self.quorum_set(str(neighbor), "remove"))
         self._neighbors.remove(neighbor)
-        self._total_nodes = len(self._neighbors) + 1
+        if neighbor in self._quorum:
+            self._quorum.remove(neighbor)
+        self._total_nodes = len(self._quorum) + 1
         return task
 
     async def send_message(self, message: Union[BaseMessage, bytes]):

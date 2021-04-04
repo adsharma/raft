@@ -12,6 +12,7 @@ class Learner(Follower):
         super().__init__(timeout)
         # Do not participate in voting
         self.timer.cancel()
+        self.learner = True
 
     async def on_vote_request(self, message: RequestVoteMessage):
         return self, None

@@ -22,16 +22,16 @@ class Leader(State):
         def default_next_index() -> int:
             return self._server._lastLogIndex + 1
 
+        super().__init__(timeout=0)
         self._nextIndex = defaultdict(default_next_index)
         self._matchIndex = defaultdict(int)
+        self._learnerIndex = defaultdict(int)
         self.timer = None  # Used by followers/candidates for leader timeout
         if not self.TEST_ONLY_DISABLE_SEND_LOOP:
             asyncio.create_task(self.append_entries_loop())
 
     def __repr__(self):
-        return (
-            f"Leader:\n\tnextIndex: {self._nextIndex}\n\tmatchIndex: {self._matchIndex}"
-        )
+        return f"Leader:\n\tnextIndex: {self._nextIndex}\n\tmatchIndex: {self._matchIndex}\n\tlearnerIndex: {self._learnerIndex}"
 
     def set_server(self, server: Server):
         self._server = server
@@ -46,7 +46,10 @@ class Leader(State):
 
         for n in self._server._neighbors:
             self._nextIndex[n] = self._server._lastLogIndex + 1
-            self._matchIndex[n] = 0
+            if n in self._server._quorum:
+                self._matchIndex[n] = 0
+            else:
+                self._learnerIndex[n] = 0
 
         return heart_beat_task
 
@@ -106,15 +109,25 @@ class Leader(State):
             return self, None
         else:
             if num_entries > 0 and original_message:
-                # The last append was good so increase their index.
-                self._matchIndex[message.sender] = (
-                    original_message.prev_log_index + num_entries
-                )
-                self._nextIndex[message.sender] = max(
-                    self._nextIndex[message.sender],
-                    self._matchIndex[message.sender] + 1,
-                )
-                logger.debug(f"Advanced {message.sender} by {num_entries}")
+                if message.role == ResponseMessage.Role.FOLLOWER:
+                    # The last append was good so increase their index.
+                    self._matchIndex[message.sender] = (
+                        original_message.prev_log_index + num_entries
+                    )
+                    self._nextIndex[message.sender] = max(
+                        self._nextIndex[message.sender],
+                        self._matchIndex[message.sender] + 1,
+                    )
+                    logger.debug(f"Advanced {message.sender} by {num_entries}")
+                elif message.role == ResponseMessage.Role.LEARNER:
+                    self._learnerIndex[message.sender] = (
+                        original_message.prev_log_index + num_entries
+                    )
+                    self._nextIndex[message.sender] = max(
+                        self._nextIndex[message.sender],
+                        self._learnerIndex[message.sender] + 1,
+                    )
+                    logger.debug(f"Learner: Advanced {message.sender} by {num_entries}")
                 new_commit_index = statistics.median_low(self._matchIndex.values())
                 if (
                     self._server._log[new_commit_index].term
