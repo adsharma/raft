@@ -1,17 +1,25 @@
 import asyncio
 import logging
-from typing import Optional
+import math
 import statistics
+
+from typing import Optional
 from collections import defaultdict
+from enum import IntFlag
 
 from ..messages.append_entries import AppendEntriesMessage, Command
 from ..messages.base import Peer, Term
 from ..messages.response import ResponseMessage
 from ..servers.server import Server
-from .config import HEART_BEAT_INTERVAL, SEND_ENTRIES_INTERVAL
+from .config import COMMIT_MODE, HEART_BEAT_INTERVAL, SEND_ENTRIES_INTERVAL
 from .state import State
 
 logger = logging.getLogger("raft")
+
+
+class CommitMode(IntFlag):
+    RAFT = 1
+    QUORUM_WRITE = 2
 
 
 class Leader(State):
@@ -25,6 +33,7 @@ class Leader(State):
         self._nextIndex = defaultdict(default_next_index)
         self._matchIndex = defaultdict(int)
         self._learnerIndex = defaultdict(int)
+        self._commit_mode = COMMIT_MODE
         self.timer = None  # Used by followers/candidates for leader timeout
         if not self.TEST_ONLY_DISABLE_SEND_LOOP:
             asyncio.create_task(self.append_entries_loop())
@@ -127,7 +136,26 @@ class Leader(State):
                         self._learnerIndex[message.sender] + 1,
                     )
                     logger.debug(f"Learner: Advanced {message.sender} by {num_entries}")
-                new_commit_index = statistics.median_low(self._matchIndex.values())
+                new_commit_index = new_commit_index_raft = new_commit_index_quorum = 0
+                if self._commit_mode & CommitMode.RAFT:
+                    new_commit_index_raft = statistics.median_low(
+                        self._matchIndex.values()
+                    )
+                if self._commit_mode & CommitMode.QUORUM_WRITE:
+                    values = [v for v in sorted(self._learnerIndex.values()) if v > 0]
+                    # compute 4 out of 6
+                    l = len(values)
+                    if l:
+                        m = math.ceil(l * 4 / 6)
+                        new_commit_index_quorum = values[-m] if m <= len(values) else 0
+                if self._commit_mode == CommitMode.RAFT:
+                    new_commit_index = new_commit_index_raft
+                elif self._commit_mode == CommitMode.QUORUM_WRITE:
+                    new_commit_index = new_commit_index_quorum
+                elif self._commit_mode == CommitMode.RAFT | CommitMode.QUORUM_WRITE:
+                    new_commit_index = min(
+                        new_commit_index_raft, new_commit_index_quorum
+                    )
                 if (
                     self._server._log[new_commit_index].term
                     == self._server._currentTerm
