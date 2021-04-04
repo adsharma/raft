@@ -33,13 +33,18 @@ class Leader(State):
         self._nextIndex = defaultdict(default_next_index)
         self._matchIndex = defaultdict(int)
         self._learnerIndex = defaultdict(int)
+        self._recorderIndex = defaultdict(int)
         self._commit_mode = COMMIT_MODE
         self.timer = None  # Used by followers/candidates for leader timeout
         if not self.TEST_ONLY_DISABLE_SEND_LOOP:
             asyncio.create_task(self.append_entries_loop())
 
     def __repr__(self):
-        return f"Leader:\n\tnextIndex: {self._nextIndex}\n\tmatchIndex: {self._matchIndex}\n\tlearnerIndex: {self._learnerIndex}"
+        return (
+            f"Leader:\n\tnextIndex: {self._nextIndex}\n\tmatchIndex: {self._matchIndex}\n\t"
+            + f"learnerIndex: {self._learnerIndex}"
+            + f"recorderIndex: {self._recorderIndex}"
+        )
 
     def set_server(self, server: Server):
         self._server = server
@@ -55,7 +60,10 @@ class Leader(State):
         for n in self._server._neighbors:
             self._nextIndex[n] = self._server._lastLogIndex + 1
             if n in self._server._quorum:
-                self._matchIndex[n] = 0
+                if self._server._disaggregated:
+                    self._recorderIndex[n] = 0
+                else:
+                    self._matchIndex[n] = 0
             else:
                 self._learnerIndex[n] = 0
 
@@ -136,13 +144,29 @@ class Leader(State):
                         self._learnerIndex[message.sender] + 1,
                     )
                     logger.debug(f"Learner: Advanced {message.sender} by {num_entries}")
+                elif message.role == ResponseMessage.Role.RECORDER:
+                    # TODO: Make this a debug only assert
+                    if not self._server._disaggregated:
+                        raise Exception(
+                            "Recorders allowed only in disaggregated configs"
+                        )
+                    self._recorderIndex[message.sender] = (
+                        original_message.prev_log_index + num_entries
+                    )
+                    self._nextIndex[message.sender] = max(
+                        self._nextIndex[message.sender],
+                        self._recorderIndex[message.sender] + 1,
+                    )
+                    logger.debug(
+                        f"Recorder: Advanced {message.sender} by {num_entries}"
+                    )
                 new_commit_index = new_commit_index_raft = new_commit_index_quorum = 0
                 if self._commit_mode & CommitMode.RAFT:
                     new_commit_index_raft = statistics.median_low(
                         self._matchIndex.values()
                     )
                 if self._commit_mode & CommitMode.QUORUM_WRITE:
-                    values = [v for v in sorted(self._learnerIndex.values()) if v > 0]
+                    values = [v for v in sorted(self._recorderIndex.values()) if v > 0]
                     # compute 4 out of 6
                     l = len(values)
                     if l:

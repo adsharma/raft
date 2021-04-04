@@ -13,6 +13,7 @@ class ResponseMessage(BaseMessage):
     class Role(IntEnum):
         FOLLOWER = 0
         LEARNER = 1
+        RECORDER = 2
 
     _type = BaseMessage.MessageType.Response
 

@@ -2,6 +2,7 @@ import logging
 
 from ..messages.append_entries import AppendEntriesMessage
 from ..messages.base import Term
+from ..messages.response import ResponseMessage
 
 from .config import FOLLOWER_TIMEOUT
 from .voter import Voter
@@ -13,6 +14,9 @@ class Follower(Voter):
     def __init__(self, timeout=FOLLOWER_TIMEOUT):
         super().__init__(timeout)
         self.leader = None
+
+    def role(self):
+        return ResponseMessage.Role.FOLLOWER
 
     def _update_commit_index(self, message: AppendEntriesMessage) -> None:
         if message.leader_commit > self._server._commitIndex:

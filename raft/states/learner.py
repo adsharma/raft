@@ -1,6 +1,7 @@
 import logging
 
 from ..messages.request_vote import RequestVoteMessage
+from ..messages.response import ResponseMessage
 from .config import FOLLOWER_TIMEOUT
 from .follower import Follower
 
@@ -12,7 +13,9 @@ class Learner(Follower):
         super().__init__(timeout)
         # Do not participate in voting
         self.timer.cancel()
-        self.learner = True
+
+    def role(self):
+        return ResponseMessage.Role.LEARNER
 
     async def on_vote_request(self, message: RequestVoteMessage):
         return self, None

@@ -21,7 +21,9 @@ class State:
         self._timeout = timeout
         self.leader = None
         self.leader_name = None
-        self.learner = False
+
+    def role(self) -> ResponseMessage.Role:
+        ...
 
     def set_server(self, server: "Server"):
         self._server = server
@@ -97,8 +99,7 @@ class State:
             response=yes,
             current_term=self._server._currentTerm,
         )
-        if self.learner:
-            response.role = ResponseMessage.Role.LEARNER
+        response.role = self.role()
         await self._server.send_message(response)
 
     async def _accept_leader(self, message, timer: Optional[TimerHandle]):
@@ -108,8 +109,9 @@ class State:
 
             from raft.states.follower import Follower  # TODO: Fix circular import
             from raft.states.learner import Learner  # TODO: Fix circular import
+            from raft.states.recorder import Recorder  # TODO: Fix circular import
 
-            if isinstance(self, Learner):
+            if isinstance(self, Learner) or isinstance(self, Recorder):
                 return self, None
 
             if not isinstance(self, Follower):

@@ -33,6 +33,7 @@ class Server:
     _lastLogIndex: int = 0
     _lastLogTerm: Term = Term(0)
     _outstanding_index: Optional[TTLCache] = field(default=None, repr=False)
+    _disaggregated: bool = False
     _parent: Optional["Server"] = field(default=None, repr=False)
 
     def __post_init__(self):
