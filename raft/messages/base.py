@@ -20,6 +20,10 @@ class BaseMessage:
         RequestVoteResponse = 2
         Response = 3
         LogEntry = 4
+        QueryState = 5
+        QueryStateResponse = 6
+        TrimLog = 7
+        TrimLogResponse = 8
 
     EXT_DICT = {}
     EXT_DICT_REVERSED = {}
