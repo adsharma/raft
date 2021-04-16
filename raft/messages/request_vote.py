@@ -12,7 +12,7 @@ class RequestVoteMessage(BaseMessage):
 
     _type = BaseMessage.MessageType.RequestVote
     last_log_index: int = 0
-    last_log_term: int = 0  # TODO: Term = Term(0)
+    last_log_term: Term = Term(0)
 
 
 @deserialize
@@ -23,4 +23,4 @@ class RequestVoteResponseMessage(BaseMessage):
     _type = BaseMessage.MessageType.RequestVoteResponse
 
     response: bool = True
-    current_term: int = 0  # TODO: Term = Term(0)
+    current_term: Term = Term(0)

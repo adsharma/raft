@@ -21,7 +21,7 @@ class Command(IntEnum):
 class LogEntry:
     _type = BaseMessage.MessageType.LogEntry
 
-    term: int  # TODO: Change to Term
+    term: Term = Term(0)
     index: int = 0
     id: str = ""
     command: Command = Command.PUT
@@ -37,7 +37,7 @@ class AppendEntriesMessage(BaseMessage):
 
     leader_id: Optional[str] = None
     prev_log_index: int = 0
-    prev_log_term: int = 0
+    prev_log_term: Term = Term(0)
     entries: List[LogEntry] = field(default_factory=list)
     leader_commit: int = 0
 
