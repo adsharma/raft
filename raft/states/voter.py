@@ -1,7 +1,7 @@
 import asyncio
 import logging
 
-from typing import Optional, Tuple
+from typing import Tuple
 
 from ..messages.base import Peer
 from ..messages.append_entries import AppendEntriesMessage

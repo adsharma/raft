@@ -5,8 +5,7 @@ import statistics
 from collections import defaultdict
 
 from ..messages.append_entries import AppendEntriesMessage, Command
-from ..messages.base import BaseMessage, Peer, Term
-from ..messages.request_vote import RequestVoteResponseMessage
+from ..messages.base import Peer, Term
 from ..messages.response import ResponseMessage
 from ..servers.server import Server
 from .config import HEART_BEAT_INTERVAL, SEND_ENTRIES_INTERVAL
