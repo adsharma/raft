@@ -1,3 +1,4 @@
+import hashlib
 import time
 import uuid
 from dataclasses import dataclass
@@ -5,6 +6,7 @@ from enum import IntEnum
 from typing import Dict, Optional, NewType, Union
 
 from serde import deserialize, serialize
+from serde.msgpack import to_msgpack
 
 Term = NewType("Term", int)
 Peer = Union[int, str, uuid.UUID]  # int used only on tests
@@ -51,3 +53,6 @@ class BaseMessage:
     def __post_init__(self):
         if self.id == "":
             self.id = uuid.uuid4().hex
+
+    def hash(self):
+        return hashlib.sha256(to_msgpack(self))

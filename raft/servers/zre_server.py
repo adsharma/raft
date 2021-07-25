@@ -20,6 +20,8 @@ logger = logging.getLogger("raft")
 class ZREServer(Server):
     "This implementation is suitable for multi-process testing"
 
+    DIGEST_SIZE = 32
+
     def __init__(
         self,
         group,
@@ -83,8 +85,14 @@ class ZREServer(Server):
             if message.receiver == self._name:
                 await self._receive_message(message)
                 return
+            elif message.receiver is not None:
+                # Disambiguate in cases where a peer is in multiple groups
+                message.group = self.group
 
             message_bytes = to_msgpack(message, ext_dict=BaseMessage.EXT_DICT_REVERSED)
+            digest = message.hash().digest()
+            assert len(digest) == self.DIGEST_SIZE
+            message_bytes = digest + message_bytes
             if message.receiver is None:
                 self._node.shout(self.group, b"/raft " + message_bytes)
             else:
@@ -92,8 +100,6 @@ class ZREServer(Server):
                     raise Exception(
                         f"Expected node.uuid().hex here, got: {message.receiver}"
                     )
-                # Disambiguate in cases where a peer is in multiple groups
-                message.group = self.group
                 self._node.whisper(
                     uuid.UUID(message.receiver),  # type: ignore
                     b"/raft " + message_bytes,
@@ -101,9 +107,15 @@ class ZREServer(Server):
 
     async def receive_message(self, message_bytes: bytes):
         try:
+            message_hash, message_bytes = (
+                message_bytes[0 : self.DIGEST_SIZE],
+                message_bytes[self.DIGEST_SIZE :],
+            )
             message = from_msgpack(
                 BaseMessage, message_bytes, ext_dict=BaseMessage.EXT_DICT
             )
+            if message_hash != message.hash().digest():
+                raise Exception(f"message hash {message_hash} doesn't match {message}")
 
         except Exception as e:
             logger.info(f"Got exception: {e}")
