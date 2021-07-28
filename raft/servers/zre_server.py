@@ -12,7 +12,7 @@ from ..boards.memory_board import MemoryBoard
 from ..messages.append_entries import AppendEntriesMessage, LogEntry, Command
 from ..messages.base import BaseMessage, Peer
 from ..states.state import State
-from .server import Server
+from .server import HashedLog, Server
 
 logger = logging.getLogger("raft")
 
@@ -35,7 +35,8 @@ class ZREServer(Server):
         parent=None,
     ):
         if log is None:
-            log = [LogEntry(term=0)]  # According to the raft spec
+            log = HashedLog()
+            log.append(LogEntry(term=0))  # According to the raft spec
         if messageBoard is None:
             messageBoard = MemoryBoard()
 
@@ -184,6 +185,7 @@ class ZREServer(Server):
                 self._name,
                 leader,
                 self._currentTerm,
+                id="set",  # Just so all nodes compute the same hash
                 entries=[
                     LogEntry(
                         command=Command.QUORUM_PUT,

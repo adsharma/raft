@@ -1,5 +1,4 @@
 import hashlib
-import time
 import uuid
 from dataclasses import dataclass
 from enum import IntEnum
@@ -31,7 +30,7 @@ class BaseMessage:
     term: int  # TODO: Change to Term
     id: str = ""
     data: Union[int, str, Dict, None] = None
-    timestamp: int = int(time.time())
+    timestamp: int = 0
     group: Optional[str] = None
 
     def __init_subclass__(cls, **kwargs):
@@ -54,5 +53,5 @@ class BaseMessage:
         if self.id == "":
             self.id = uuid.uuid4().hex
 
-    def hash(self):
+    def hash(self) -> "hashlib._Hash":
         return hashlib.sha256(to_msgpack(self))

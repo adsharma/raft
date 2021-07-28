@@ -1,8 +1,11 @@
+import hashlib
+
 from dataclasses import dataclass, field
 from enum import IntEnum
 from typing import List, Optional, Union
 
 from serde import deserialize, serialize
+from serde.msgpack import to_msgpack
 
 from .base import BaseMessage, Term
 
@@ -26,6 +29,9 @@ class LogEntry:
     command: Command = Command.PUT
     key: Union[int, str, None] = None
     value: Union[int, str, None] = None
+
+    def hash(self) -> "hashlib._Hash":
+        return hashlib.sha256(to_msgpack(self))
 
 
 @deserialize

@@ -64,10 +64,10 @@ class Leader(State):
 
         for entry in message.entries:
             entry.id = message.id
-            self._server._log.append(entry)
-            self._server._lastLogIndex = len(self._server._log) - 1
+            self._server._lastLogIndex = len(self._server._log)
             self._server._lastLogTerm = entry.term = self._server._currentTerm
             entry.index = self._server._lastLogIndex
+            self._server._log.append(entry)
         return self, None
 
     async def on_response_received(

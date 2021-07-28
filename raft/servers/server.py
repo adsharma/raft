@@ -1,20 +1,47 @@
 import asyncio
-import logging
-from dataclasses import dataclass, field
-from typing import Any, List, Optional
-
 import dbm
+import hashlib
+import logging
 import os
 import random
 import threading
-from cachetools.ttl import TTLCache
 import zmq
 import zmq.asyncio
+
+from cachetools.ttl import TTLCache
+from dataclasses import dataclass, field
+from typing import Any, List, Optional
 
 from ..boards.memory_board import Board, MemoryBoard
 from ..messages.base import Term, Peer
 from ..messages.append_entries import LogEntry
 from ..states.state import State
+
+
+class HashedLog(List[LogEntry]):
+    def __init__(self):
+        super().__init__()
+        self._hash = hashlib.sha256(b"")
+
+    def append(self, entry: LogEntry):
+        super().append(entry)
+        self._hash = hashlib.sha256(self._hash.digest() + entry.hash().digest())
+
+    def __getitem__(self, key):
+        """So we return a HashedLog instead of lists on slicing"""
+        if isinstance(key, slice):
+            indices = range(*key.indices(len(self)))
+            ret = HashedLog()
+            for i in indices:
+                ret.append(self.__getitem__(i))
+            return ret
+        return super().__getitem__(key)
+
+    def digest(self) -> bytes:
+        return self._hash.digest()
+
+    def __repr__(self) -> bytes:
+        return f"{self._hash.hexdigest()}: " + super().__repr__()
 
 
 @dataclass
@@ -58,7 +85,8 @@ class Server:
     def _clear(self):
         self._quorum = set()
         self._total_nodes = len(self._neighbors) + 1
-        self._log = [LogEntry(term=0)]  # Dummy node per raft spec
+        self._log = HashedLog()
+        self._log.append(LogEntry(term=0))  # Dummy node per raft spec
         self._commitIndex = 0
         self._currentTerm = Term(0)
         self._lastApplied = 0
@@ -106,7 +134,7 @@ class ZeroMQServer(Server):
         port=0,
     ):
         if log is None:
-            log = []
+            log = HashedLog()
         if neighbors is None:
             neighbors = []
         if messageBoard is None:
