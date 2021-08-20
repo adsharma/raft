@@ -46,6 +46,7 @@ class ZREServer(Server):
             log,
             messageBoard,
             [],
+            set(),
             _stable_storage=stable_storage,
         )
         self.group = group
@@ -181,6 +182,12 @@ class ZREServer(Server):
     async def quorum_set(self, neighbor: str, op: str):
         leader = self._state.leader
         if leader is not None:
+            if leader != self._name:
+                # Let the leader handle this
+                async def nop():
+                    pass
+
+                return nop
             append_entries = AppendEntriesMessage(
                 self._name,
                 leader,

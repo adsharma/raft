@@ -10,7 +10,7 @@ import zmq.asyncio
 
 from cachetools.ttl import TTLCache
 from dataclasses import dataclass, field
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Set
 
 from ..boards.memory_board import Board, MemoryBoard
 from ..messages.base import Term, Peer
@@ -51,6 +51,7 @@ class Server:
     _log: List
     _messageBoard: Board = field(repr=False)
     _neighbors: List[Peer]
+    _quorum: Set[str]
 
     # Internal state
     _stable_storage: Any = field(repr=False)
@@ -149,6 +150,7 @@ class ZeroMQServer(Server):
             log,
             messageBoard,
             list(self._all_neighbors.keys()),
+            set(),
             _stable_storage=None,
         )
         self._port = port
