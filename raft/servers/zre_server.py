@@ -2,11 +2,11 @@ import asyncio
 import logging
 import threading
 import uuid
-from typing import Union
 
 from cachetools import TTLCache
 from pyre import Pyre
 from serde.msgpack import from_msgpack, to_msgpack
+from typing import List, Union
 
 from ..boards.memory_board import MemoryBoard
 from ..messages.append_entries import AppendEntriesMessage, LogEntry, Command
@@ -47,6 +47,7 @@ class ZREServer(Server):
             messageBoard,
             [],
             set(),
+            set(),
             _stable_storage=stable_storage,
         )
         self.group = group
@@ -65,7 +66,6 @@ class ZREServer(Server):
         loop = asyncio.get_event_loop()
         task = loop.create_task(self.quorum_set(str(neighbor), "add"))
         self._neighbors.append(neighbor)
-        self._total_nodes = len(self._quorum) + 1
         return task
 
     def remove_neighbor(self, neighbor: Peer):
@@ -74,8 +74,22 @@ class ZREServer(Server):
         self._neighbors.remove(neighbor)
         if neighbor in self._quorum:
             self._quorum.remove(neighbor)
-        self._total_nodes = len(self._quorum) + 1
+        if neighbor in self._live_quorum:
+            self._live_quorum.remove(neighbor)
         return task
+
+    def quorum_update(self, entries: List[LogEntry]) -> None:
+        for entry in entries:
+            assert entry.command == Command.QUORUM_PUT
+            if entry.value == "add":
+                self._quorum.add(entry.key)
+            elif entry.value == "remove":
+                if entry.key in self._quorum:
+                    self._quorum.remove(entry.key)
+                if entry.key in self._live_quorum:
+                    self._live_quorum.remove(entry.key)
+                # TODO: if the leader is removed, needs to step down
+        self._total_nodes = len(self._quorum)
 
     async def send_message(self, message: Union[BaseMessage, bytes]):
         logger.debug(f"sending: {self._state}: {message}")
@@ -151,6 +165,12 @@ class ZREServer(Server):
 
         async with self._condition:
             await self._condition.wait_for(check_condition)
+            entries = [
+                e
+                for e in self._server._log[expected_index : self._commitIndex + 1]
+                if e.command == Command.QUORUM_PUT
+            ]
+            self.quorum_update(entries)
             self._condition_event.set()
 
     async def set(self, key: str, value: str):
@@ -206,7 +226,7 @@ class ZREServer(Server):
             expected_index = self._commitIndex + 1
             await self.send_message(append_entries)
             self._condition_event = threading.Event()
-            return (self.wait_for, expected_index, append_entries.id)
+            return (self.wait_for, expected_index, append_entries.entries[0].id)
         else:
             if self._currentTerm > 0:
                 raise Exception("Leader not found")

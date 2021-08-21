@@ -1,10 +1,11 @@
 import logging
 
-from ..messages.append_entries import AppendEntriesMessage
+from ..messages.append_entries import AppendEntriesMessage, Command
 from ..messages.base import Term
 
 from .config import FOLLOWER_TIMEOUT
 from .voter import Voter
+
 
 logger = logging.getLogger("raft")
 
@@ -79,6 +80,8 @@ class Follower(Voter):
         # Apply the log entries
         for e in message.entries:
             log.append(e)
+        quorum_entries = [e for e in message.entries if e.command == Command.QUORUM_PUT]
+        self._server.quorum_update(quorum_entries)
 
         async with self._server._condition:
             self._server._condition.notify_all()

@@ -107,6 +107,8 @@ class Leader(State):
             self._nextIndex[message.sender] = previousIndex
             return self, None
         else:
+            if num_entries == 0 and message.sender not in self._server._live_quorum:
+                self._server._live_quorum.add(message.sender)
             if num_entries > 0 and original_message:
                 if message.role == ResponseMessage.Role.FOLLOWER:
                     # The last append was good so increase their index.
@@ -165,6 +167,12 @@ class Leader(State):
             await self._server.quorum_set(self.leader, "add")
             for n in self._server._neighbors:
                 await self._server.quorum_set(str(n), "add")
+            entries = [
+                e
+                for e in self._server._log[1 : self._server._lastLogIndex + 1]
+                if e.command == Command.QUORUM_PUT
+            ]
+            self._server.quorum_update(entries)
 
         await self._send_one_heart_beat()
 

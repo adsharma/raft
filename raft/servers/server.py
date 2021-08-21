@@ -52,6 +52,9 @@ class Server:
     _messageBoard: Board = field(repr=False)
     _neighbors: List[Peer]
     _quorum: Set[str]
+    # These are members of the quorum that have voted in an election
+    # or responded to heart beat
+    _live_quorum: Set[str]
 
     # Internal state
     _stable_storage: Any = field(repr=False)
@@ -85,6 +88,7 @@ class Server:
 
     def _clear(self):
         self._quorum = set()
+        self._live_quorum = {self._name}
         self._total_nodes = len(self._neighbors) + 1
         self._log = HashedLog()
         self._log.append(LogEntry(term=0))  # Dummy node per raft spec
@@ -116,6 +120,9 @@ class Server:
         ...
 
     def remove_neighbor(self, neighbor):
+        ...
+
+    def quorum_update(self, entry: List[LogEntry]):
         ...
 
     async def quorum_set(self, neighbor: str, op: str) -> None:
@@ -150,6 +157,7 @@ class ZeroMQServer(Server):
             log,
             messageBoard,
             list(self._all_neighbors.keys()),
+            set(),
             set(),
             _stable_storage=None,
         )
