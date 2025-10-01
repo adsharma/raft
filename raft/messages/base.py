@@ -7,6 +7,13 @@ from typing import Dict, Optional, NewType, Union
 from serde import deserialize, serialize
 from serde.msgpack import to_msgpack
 
+try:
+    from typing import Hashable  # For Python versions that might not have it
+    from hashlib import _Hash as HashType
+except ImportError:
+    # For newer Python versions where _Hash is not directly importable
+    HashType = type(hashlib.sha256())
+
 Term = NewType("Term", int)
 Peer = Union[int, str, uuid.UUID]  # int used only on tests
 
@@ -53,5 +60,5 @@ class BaseMessage:
         if self.id == "":
             self.id = uuid.uuid4().hex
 
-    def hash(self) -> "hashlib._Hash":
+    def hash(self) -> 'HashType':
         return hashlib.sha256(to_msgpack(self))
