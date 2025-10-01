@@ -1,0 +1,30 @@
+[project]
+name = "raft"
+version = "0.1.0"
+description = "A implementation of Raft in pure Python"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "pyzmq>=20",
+    "pyserde==0.2.1",
+    "cachetools>=4.1.1",
+    "msgpack>=1.0.0",
+]
+
+[dependency-groups]
+dev = [
+    "pip>=25.2",
+    "bump2version>=0.5.11",
+    "wheel>=0.38.1",
+    "watchdog>=3.0.0",
+    "flake8>=3.7.8",
+    "tox>=3.14.0",
+    "coverage>=4.5.4",
+    "Sphinx>=1.8.5",
+    "twine>=1.14.0",
+    "pytest>=7.0.0",
+]
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"

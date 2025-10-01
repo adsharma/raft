@@ -8,7 +8,7 @@ import threading
 import zmq
 import zmq.asyncio
 
-from cachetools.ttl import TTLCache
+from cachetools import TTLCache
 from dataclasses import dataclass, field
 from typing import Any, List, Optional, Set
 
