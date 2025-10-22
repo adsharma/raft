@@ -2,8 +2,7 @@
 
 import unittest
 
-from raft.messages.append_entries import AppendEntriesMessage, LogEntry
-from raft.messages.base import BaseMessage, Term
+from raft.messages import BaseMessage, Term, AppendEntriesMessage, LogEntry, Message
 from serde.msgpack import from_msgpack, to_msgpack
 
 
@@ -12,9 +11,9 @@ class TestSerde(unittest.TestCase):
         message = AppendEntriesMessage(
             "test", "foo", Term(0), entries=[LogEntry(term=Term(0), index=0)]
         )
-        message_bytes = to_msgpack(message, ext_dict=BaseMessage.EXT_DICT_REVERSED)
+        message_bytes = to_msgpack(message, cls=Message)
         decoded_message = from_msgpack(
-            BaseMessage, message_bytes, ext_dict=BaseMessage.EXT_DICT
+            Message, message_bytes
         )
         self.assertEqual(message.id, decoded_message.id)
         self.assertEqual(message, decoded_message)
@@ -30,7 +29,7 @@ class TestSerde(unittest.TestCase):
         )
         self.assertEqual(
             message.hash().hexdigest(),
-            "edf251804da904e6c51513166fed1491c3a48135f9670c98c1ee7368725888b1",
+            "341e6380a4b0ff6f7676042fe17e5c8a034c51eb0d77ae87656f7b16a3252fe0",
         )
 
 

@@ -5,8 +5,8 @@ description = "A implementation of Raft in pure Python"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "pyzmq>=20",
-    "pyserde==0.2.1",
+    "pyzmq>=25.1.0",
+    "pyserde==0.25.1",
     "cachetools>=4.1.1",
     "msgpack>=1.0.0",
 ]

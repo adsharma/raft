@@ -4,46 +4,27 @@ from dataclasses import dataclass
 from enum import IntEnum
 from typing import Dict, Optional, NewType, Union
 
-from serde import deserialize, serialize
+from serde import serde, InternalTagging
 from serde.msgpack import to_msgpack
-
-try:
-    from typing import Hashable  # For Python versions that might not have it
-    from hashlib import _Hash as HashType
-except ImportError:
-    # For newer Python versions where _Hash is not directly importable
-    HashType = type(hashlib.sha256())
 
 Term = NewType("Term", int)
 Peer = Union[int, str, uuid.UUID]  # int used only on tests
+HashType = hashlib._hashlib.HASH
 
 
-@deserialize
-@serialize
+@serde(tagging=InternalTagging("_type"))
 @dataclass
 class BaseMessage:
-    class MessageType(IntEnum):
-        AppendEntries = 0
-        RequestVote = 1
-        RequestVoteResponse = 2
-        Response = 3
-        LogEntry = 4
-
-    EXT_DICT = {}
-    EXT_DICT_REVERSED = {}
-
     sender: Peer
     receiver: Optional[Peer]
     term: int  # TODO: Change to Term
-    id: str = ""
-    data: Union[int, str, Dict, None] = None
+    id: Union[int, uuid.UUID] = 0
+    #data: Union[int, str, Dict, None] = None
     timestamp: int = 0
     group: Optional[str] = None
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
-        cls.EXT_DICT[cls._type] = cls  # type: ignore
-        cls.EXT_DICT_REVERSED[cls] = cls._type  # type: ignore
 
     @property
     def type(self):
@@ -54,11 +35,11 @@ class BaseMessage:
 
     @staticmethod
     def default() -> "BaseMessage":
-        return BaseMessage(0, 0, Term(0), "", 0, 0)
+        return BaseMessage(0, 0, Term(0), 0, 0, 0)
 
     def __post_init__(self):
-        if self.id == "":
-            self.id = uuid.uuid4().hex
+        if self.id == 0:
+            self.id = uuid.uuid4()
 
     def hash(self) -> 'HashType':
         return hashlib.sha256(to_msgpack(self))

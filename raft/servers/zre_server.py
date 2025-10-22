@@ -9,8 +9,8 @@ from serde.msgpack import from_msgpack, to_msgpack
 from typing import List, Union
 
 from ..boards.memory_board import MemoryBoard
-from ..messages.append_entries import AppendEntriesMessage, LogEntry, Command
-from ..messages.base import BaseMessage, Peer
+from ..messages import AppendEntriesMessage, LogEntry, Command
+from ..messages import BaseMessage, Peer, Message
 from ..states.state import State
 from .server import HashedLog, Server
 
@@ -105,7 +105,7 @@ class ZREServer(Server):
                 # Disambiguate in cases where a peer is in multiple groups
                 message.group = self.group
 
-            message_bytes = to_msgpack(message, ext_dict=BaseMessage.EXT_DICT_REVERSED)
+            message_bytes = to_msgpack(message, cls=Message)
             digest = message.hash().digest()
             assert len(digest) == self.DIGEST_SIZE
             message_bytes = digest + message_bytes
@@ -128,7 +128,7 @@ class ZREServer(Server):
                 message_bytes[self.DIGEST_SIZE :],
             )
             message = from_msgpack(
-                BaseMessage, message_bytes, ext_dict=BaseMessage.EXT_DICT
+                BaseMessage, message_bytes
             )
             if message_hash != message.hash().digest():
                 raise Exception(f"message hash {message_hash} doesn't match {message}")
