@@ -19,14 +19,11 @@ class TestFollowerServer(unittest.IsolatedAsyncioTestCase):
         board = MemoryBoard()
         state = Follower()
         self.server = Server(1, state, [], board, [self.oserver])
-        asyncio.create_task(self.oserver.run())
-        asyncio.create_task(self.server.run())
+        # Don't start the run tasks - these tests don't need network communication
 
     async def asyncTearDown(self):
-        self.oserver.stop()
-        self.server.stop()
-        # Wait for tasks to cancel
-        await asyncio.gather(*[t for t in self.oserver._tasks + self.server._tasks if not t.done()], return_exceptions=True)
+        # Cleanup is not needed since we're not starting any tasks
+        pass
 
     async def test_follower_server_on_message(self):
         msg = AppendEntriesMessage(0, 1, 2)
