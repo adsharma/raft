@@ -163,6 +163,7 @@ class ZeroMQServer(Server):
         )
         self._port = port
         self._stop = False
+        self._tasks = []
 
     def add_neighbor(self, neighbor: "ZeroMQServer"):
         self._all_neighbors[neighbor._name] = neighbor
@@ -220,11 +221,13 @@ class ZeroMQServer(Server):
         socket.close()
 
     async def run(self):
-        asyncio.create_task(self.publisher())
-        asyncio.create_task(self.subscriber())
+        self._tasks.append(asyncio.create_task(self.publisher()))
+        self._tasks.append(asyncio.create_task(self.subscriber()))
 
     def stop(self):
         self._stop = True
+        for task in self._tasks:
+            task.cancel()
 
     async def send_message(self, message):
         if message.receiver is None:
