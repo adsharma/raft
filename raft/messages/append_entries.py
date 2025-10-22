@@ -33,7 +33,7 @@ class LogEntry:
 @serde(tagging=InternalTagging("_type"))
 @dataclass
 class AppendEntriesMessage(BaseMessage):
-    leader_id: Optional[str] = None
+    leader_id: Union[int, str, None] = None
     prev_log_index: int = 0
     prev_log_term: Term = Term(0)
     entries: List[LogEntry] = field(default_factory=list)
