@@ -22,17 +22,19 @@ class TestFollowerServer(unittest.IsolatedAsyncioTestCase):
         asyncio.create_task(self.oserver.run())
         asyncio.create_task(self.server.run())
 
-    def tearDown(self):
+    async def asyncTearDown(self):
         self.oserver.stop()
         self.server.stop()
+        # Wait for tasks to cancel
+        await asyncio.gather(*[t for t in self.oserver._tasks + self.server._tasks if not t.done()], return_exceptions=True)
 
     async def test_follower_server_on_message(self):
-        msg = AppendEntriesMessage(0, 1, 2, {})
+        msg = AppendEntriesMessage(0, 1, 2)
         await self.server.on_message(msg)
 
     async def test_follower_server_on_receive_message_with_lesser_term(self):
 
-        msg = AppendEntriesMessage(0, 1, -1, {})
+        msg = AppendEntriesMessage(0, 1, -1)
 
         await self.server.on_message(msg)
 
@@ -41,7 +43,7 @@ class TestFollowerServer(unittest.IsolatedAsyncioTestCase):
 
     async def test_follower_server_on_receive_message_with_greater_term(self):
 
-        msg = AppendEntriesMessage(0, 1, 2, {})
+        msg = AppendEntriesMessage(0, 1, 2)
 
         await self.server.on_message(msg)
 
@@ -137,7 +139,7 @@ class TestFollowerServer(unittest.IsolatedAsyncioTestCase):
 
         await self.server.on_message(msg)
 
-        msg = RequestVoteMessage(2, 1, 2, {})
+        msg = RequestVoteMessage(2, 1, 2)
         await self.server.on_message(msg)
 
         self.assertEqual((2, 0), self.server._state.last_vote)
