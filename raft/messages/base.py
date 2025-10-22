@@ -19,7 +19,7 @@ class BaseMessage:
     receiver: Optional[Peer]
     term: int  # TODO: Change to Term
     id: Union[int, uuid.UUID] = 0
-    #data: Union[int, str, Dict, None] = None
+    data: int = 0
     timestamp: int = 0
     group: Optional[str] = None
 

@@ -74,7 +74,7 @@ class Server:
             # Use for unit test only
             self._dbm_filename = f"/tmp/{self._name}-{random.randrange(1 << 32)}.db"
             self._stable_storage = dbm.open(
-                self._dbm_filename, "cs"  # type: ignore (typeshed#5175)
+                self._dbm_filename, "c"  # type: ignore (typeshed#5175)
             )
         self._state.set_server(self)
         self._messageBoard.set_owner(self)
@@ -82,7 +82,7 @@ class Server:
         self._condition_event: Optional[threading.Event] = None
 
     def __del__(self):
-        if self._dbm_filename is not None:
+        if self._dbm_filename is not None and self._stable_storage is not None:
             self._stable_storage.close()
             os.unlink(self._dbm_filename)
 
