@@ -1,8 +1,8 @@
 import asyncio
 import logging
-from typing import Optional
 import statistics
 from collections import defaultdict
+from typing import Optional
 
 from ..messages.append_entries import AppendEntriesMessage, Command
 from ..messages.base import Peer, Term

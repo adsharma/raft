@@ -43,7 +43,7 @@ class TestLeaderServer(unittest.IsolatedAsyncioTestCase):
         self.assertEqual({1: 1, 2: 1, 3: 1}, self.leader._state._nextIndex)
 
     async def test_leader_server_sends_appendentries_to_all_neighbors_and_is_appended_to_their_logs(
-        self
+        self,
     ):
 
         await self._perform_heart_beat()
@@ -61,7 +61,7 @@ class TestLeaderServer(unittest.IsolatedAsyncioTestCase):
             self.assertEqual([LogEntry(term=0), LogEntry(term=1, value=100)], i._log)
 
     async def test_leader_server_sends_appendentries_to_all_neighbors_but_some_have_dirtied_logs(
-        self
+        self,
     ):
         n0 = self.leader.get_neighbor(self.leader._neighbors[0])
         n0._log.append(LogEntry(term=1, index=1, value=100))

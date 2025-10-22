@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import asyncio
 import unittest
 
 from raft.boards.memory_board import MemoryBoard
@@ -47,7 +46,7 @@ class TestFollowerServer(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(2, self.server._currentTerm)
 
     async def test_follower_server_on_receive_message_where_log_does_not_have_prevLogTerm(
-        self
+        self,
     ):
         self.server._log.append(LogEntry(term=100, value=2000))
         msg = AppendEntriesMessage(
@@ -81,7 +80,7 @@ class TestFollowerServer(unittest.IsolatedAsyncioTestCase):
         )
 
     async def test_follower_server_on_receive_message_where_log_contains_conflicting_entry_at_new_index(
-        self
+        self,
     ):
         self.server._log.append(LogEntry(term=1, index=1, value=0))
         self.server._log.append(LogEntry(term=1, index=2, value=200))
@@ -104,7 +103,7 @@ class TestFollowerServer(unittest.IsolatedAsyncioTestCase):
         )
 
     async def test_follower_server_on_receive_message_where_log_is_empty_and_receives_its_first_value(
-        self
+        self,
     ):
 
         msg = AppendEntriesMessage(

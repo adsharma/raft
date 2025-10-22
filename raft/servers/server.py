@@ -5,16 +5,16 @@ import logging
 import os
 import random
 import threading
-import zmq
-import zmq.asyncio
-
-from cachetools import TTLCache
 from dataclasses import dataclass, field
 from typing import Any, List, Optional, Set
 
+import zmq
+import zmq.asyncio
+from cachetools import TTLCache
+
 from ..boards.memory_board import Board, MemoryBoard
-from ..messages.base import Term, Peer
 from ..messages.append_entries import LogEntry
+from ..messages.base import Peer, Term
 from ..states.state import State
 
 
@@ -99,8 +99,7 @@ class Server:
         self._lastLogTerm = Term(0)
         self._dbm_filename = None
 
-    async def send_message(self, message):
-        ...
+    async def send_message(self, message): ...
 
     async def receive_message(self, message):
         "Use this for the general case"
@@ -110,20 +109,15 @@ class Server:
         "Use this for local message delivery"
         ...
 
-    async def post_message(self, message):
-        ...
+    async def post_message(self, message): ...
 
-    async def on_message(self, message):
-        ...
+    async def on_message(self, message): ...
 
-    def add_neighbor(self, neighbor):
-        ...
+    def add_neighbor(self, neighbor): ...
 
-    def remove_neighbor(self, neighbor):
-        ...
+    def remove_neighbor(self, neighbor): ...
 
-    def quorum_update(self, entry: List[LogEntry]):
-        ...
+    def quorum_update(self, entry: List[LogEntry]): ...
 
     async def quorum_set(self, neighbor: str, op: str) -> None:
         pass

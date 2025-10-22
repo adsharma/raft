@@ -7,7 +7,7 @@ Why?
 ====
 
 Python is an easy to learn language, only marginally more complex than pseudo code, but something you
-can write unit tests against and try new ideas. Python3 also supports type annotations, which can 
+can write unit tests against and try new ideas. Python3 also supports type annotations, which can
 improve readability.
 
 How?

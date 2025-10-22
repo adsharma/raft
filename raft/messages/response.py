@@ -1,9 +1,10 @@
 from dataclasses import dataclass
 from enum import IntEnum
 
-from serde import serde, InternalTagging
+from serde import InternalTagging, serde
 
 from .base import BaseMessage
+
 
 @serde(tagging=InternalTagging("_type"))
 @dataclass

@@ -4,10 +4,10 @@ import random
 from asyncio.events import TimerHandle
 from typing import TYPE_CHECKING, Optional
 
-from ..messages.base import BaseMessage
-from ..messages.response import ResponseMessage
 from ..messages.append_entries import AppendEntriesMessage
-from ..messages.request_vote import RequestVoteResponseMessage, RequestVoteMessage
+from ..messages.base import BaseMessage
+from ..messages.request_vote import RequestVoteMessage, RequestVoteResponseMessage
+from ..messages.response import ResponseMessage
 
 if TYPE_CHECKING:
     from ..servers.server import Server
@@ -26,7 +26,7 @@ class State:
     def set_server(self, server: "Server"):
         self._server = server
         db = self._server._stable_storage
-        if not "last_vote" in db:
+        if "last_vote" not in db:
             if self._last_vote is None:
                 db["last_vote"] = str((self._server._currentTerm, None))
             else:

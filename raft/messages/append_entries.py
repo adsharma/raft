@@ -1,13 +1,12 @@
 import hashlib
-
 from dataclasses import dataclass, field
 from enum import IntEnum
-from typing import List, Optional, Union
+from typing import List, Union
 
-from serde import serde, InternalTagging
+from serde import InternalTagging, serde
 from serde.msgpack import to_msgpack
 
-from .base import BaseMessage, Term, HashType
+from .base import BaseMessage, HashType, Term
 
 
 class Command(IntEnum):
@@ -15,6 +14,7 @@ class Command(IntEnum):
     GET = 1
     QUORUM_PUT = 2
     QUORUM_GET = 3
+
 
 @serde(tagging=InternalTagging("_type"))
 @dataclass
