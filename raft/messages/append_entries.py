@@ -4,10 +4,10 @@ from dataclasses import dataclass, field
 from enum import IntEnum
 from typing import List, Optional, Union
 
-from serde import deserialize, serialize
+from serde import serde, InternalTagging
 from serde.msgpack import to_msgpack
 
-from .base import BaseMessage, Term
+from .base import BaseMessage, Term, HashType
 
 
 class Command(IntEnum):
@@ -16,13 +16,9 @@ class Command(IntEnum):
     QUORUM_PUT = 2
     QUORUM_GET = 3
 
-
-@deserialize
-@serialize
+@serde(tagging=InternalTagging("_type"))
 @dataclass
 class LogEntry:
-    _type = BaseMessage.MessageType.LogEntry
-
     term: Term = Term(0)
     index: int = 0
     id: str = ""
@@ -30,16 +26,13 @@ class LogEntry:
     key: Union[int, str, None] = None
     value: Union[int, str, None] = None
 
-    def hash(self) -> "hashlib._Hash":
+    def hash(self) -> "HashType":
         return hashlib.sha256(to_msgpack(self))
 
 
-@deserialize
-@serialize
+@serde(tagging=InternalTagging("_type"))
 @dataclass
 class AppendEntriesMessage(BaseMessage):
-    _type = BaseMessage.MessageType.AppendEntries
-
     leader_id: Optional[str] = None
     prev_log_index: int = 0
     prev_log_term: Term = Term(0)
@@ -48,4 +41,3 @@ class AppendEntriesMessage(BaseMessage):
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
-        BaseMessage.EXT_DICT[LogEntry._type] = LogEntry  # type: ignore
