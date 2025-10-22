@@ -2,15 +2,21 @@ import asyncio
 import logging
 import threading
 import uuid
+from typing import List, Union
 
 from cachetools import TTLCache
 from pyre import Pyre
 from serde.msgpack import from_msgpack, to_msgpack
-from typing import List, Union
 
 from ..boards.memory_board import MemoryBoard
-from ..messages import AppendEntriesMessage, LogEntry, Command
-from ..messages import BaseMessage, Peer, Message
+from ..messages import (
+    AppendEntriesMessage,
+    BaseMessage,
+    Command,
+    LogEntry,
+    Message,
+    Peer,
+)
 from ..states.state import State
 from .server import HashedLog, Server
 
@@ -112,7 +118,7 @@ class ZREServer(Server):
             if message.receiver is None:
                 self._node.shout(self.group, b"/raft " + message_bytes)
             else:
-                if type(message.receiver) != str:
+                if not isinstance(message.receiver, str):
                     raise Exception(
                         f"Expected node.uuid().hex here, got: {message.receiver}"
                     )
@@ -127,9 +133,7 @@ class ZREServer(Server):
                 message_bytes[0 : self.DIGEST_SIZE],
                 message_bytes[self.DIGEST_SIZE :],
             )
-            message = from_msgpack(
-                BaseMessage, message_bytes
-            )
+            message = from_msgpack(BaseMessage, message_bytes)
             if message_hash != message.hash().digest():
                 raise Exception(f"message hash {message_hash} doesn't match {message}")
 
@@ -148,11 +152,11 @@ class ZREServer(Server):
         await self._messageBoard.post_message(message)
 
     async def on_message(self, message):
-        logger.debug(f"---------- on_message start -----------")
+        logger.debug("---------- on_message start -----------")
         logger.debug(f"{self._state}: {message}")
         state, response = await self._state.on_message(message)
         logger.debug(f"{state}: {response}")
-        logger.debug(f"---------- on_message end -----------")
+        logger.debug("---------- on_message end -----------")
 
         self._state = state
 

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from serde import serde, InternalTagging
+from serde import InternalTagging, serde
 
 from .base import BaseMessage, Term
 

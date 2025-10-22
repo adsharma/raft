@@ -1,10 +1,9 @@
 import asyncio
 import logging
-
 from typing import Tuple
 
-from ..messages.base import Peer
 from ..messages.append_entries import AppendEntriesMessage
+from ..messages.base import Peer
 from ..messages.request_vote import RequestVoteMessage, RequestVoteResponseMessage
 from .state import State
 
@@ -25,7 +24,7 @@ class Voter(State):
     @last_vote.setter
     def last_vote(self, value: Tuple[int, Peer]):
         if not self._server:
-            raise Exception(f"setting last vote without server")
+            raise Exception("setting last vote without server")
         self._server._stable_storage["last_vote"] = str(value)
         self._last_vote = value
 

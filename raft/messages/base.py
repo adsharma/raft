@@ -1,10 +1,9 @@
 import hashlib
 import uuid
 from dataclasses import dataclass
-from enum import IntEnum
-from typing import Dict, Optional, NewType, Union
+from typing import NewType, Optional, Union
 
-from serde import serde, InternalTagging
+from serde import InternalTagging, serde
 from serde.msgpack import to_msgpack
 
 Term = NewType("Term", int)
@@ -41,5 +40,5 @@ class BaseMessage:
         if self.id == 0:
             self.id = uuid.uuid4()
 
-    def hash(self) -> 'HashType':
+    def hash(self) -> "HashType":
         return hashlib.sha256(to_msgpack(self))

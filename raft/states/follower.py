@@ -2,10 +2,8 @@ import logging
 
 from ..messages.append_entries import AppendEntriesMessage, Command
 from ..messages.base import Term
-
 from .config import FOLLOWER_TIMEOUT
 from .voter import Voter
-
 
 logger = logging.getLogger("raft")
 
