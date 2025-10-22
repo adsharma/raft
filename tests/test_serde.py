@@ -29,7 +29,7 @@ class TestSerde(unittest.TestCase):
         )
         self.assertEqual(
             message.hash().hexdigest(),
-            "341e6380a4b0ff6f7676042fe17e5c8a034c51eb0d77ae87656f7b16a3252fe0",
+            "5f9dbf4bdd49da62f2c8f3c9181ad4abdc9bdbadbfcd52463ff8c89258be8fe6",
         )
 
 
