@@ -28,6 +28,11 @@ dev = [
 [tool.isort]
 profile = "black"
 
+[tool.setuptools.packages.find]
+# The vendored py2many/ marker shim must not be installed as a top-level
+# package: it would shadow a real py2many installation.  Keep it source-only.
+exclude = ["py2many*", "static*", "static-python-skill*", "tests*", "docs*"]
+
 [build-system]
 requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
