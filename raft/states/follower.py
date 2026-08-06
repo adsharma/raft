@@ -1,5 +1,6 @@
 import logging
 
+from ..core import clamp_commit, log_matching_ok
 from ..messages.append_entries import AppendEntriesMessage, Command
 from ..messages.base import Term
 from .config import FOLLOWER_TIMEOUT
@@ -15,10 +16,11 @@ class Follower(Voter):
 
     def _update_commit_index(self, message: AppendEntriesMessage) -> None:
         if message.leader_commit > self._server._commitIndex:
-            # If the leader is too far ahead then we
-            #   use the length of the log - 1
-            log = self._server._log
-            self._server._commitIndex = min(message.leader_commit, max(0, len(log) - 1))
+            # If the leader is too far ahead then we use the length of the
+            # log - 1.  Verified clamp (raft.core.clamp_commit).
+            self._server._commitIndex = clamp_commit(
+                message.leader_commit, len(self._server._log)
+            )
 
     async def on_append_entries(self, message: AppendEntriesMessage):
         await super().on_append_entries(message)
@@ -38,8 +40,13 @@ class Follower(Voter):
 
         # We need to hold the induction proof of the algorithm here.
         #   So, we make sure that the prevLogIndex term is always
-        #   equal to the server.
-        if len(log) > 0 and log[message.prev_log_index].term != message.prev_log_term:
+        #   equal to the server.  The follower has already been checked to be
+        #   within the log (above), so the verified Log-Matching guard
+        #   (raft.core.log_matching_ok) reduces to: reject on a term conflict.
+        log_terms = [e.term for e in log]
+        if not log_matching_ok(
+            log_terms, message.prev_log_index, message.prev_log_term
+        ):
             # There is a conflict we need to resync so delete everything
             #   from this prevLogIndex and forward and send a failure
             #   to the server.

@@ -2,6 +2,7 @@ import asyncio
 import logging
 from typing import Tuple
 
+from ..core import may_grant_vote
 from ..messages.append_entries import AppendEntriesMessage
 from ..messages.base import Peer
 from ..messages.request_vote import RequestVoteMessage, RequestVoteResponseMessage
@@ -42,8 +43,13 @@ class Voter(State):
             await self._send_vote_response_message(message, yes=False)
 
         last_vote_term, voted_for = self.last_vote
-        eligible_to_vote = message.term > last_vote_term
-        if eligible_to_vote and message.last_log_index >= self._server._lastLogIndex:
+        # Verified decision (raft.core.may_grant_vote): match Voter.on_vote_request.
+        if may_grant_vote(
+            last_vote_term,
+            self._server._lastLogIndex,
+            message.term,
+            message.last_log_index,
+        ):
             self.last_vote = (message.term, message.sender)
             await self._send_vote_response_message(message)
         else:

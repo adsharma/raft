@@ -4,6 +4,8 @@ import statistics
 from collections import defaultdict
 from typing import Optional
 
+from .. import live
+from ..core import can_commit
 from ..messages.append_entries import AppendEntriesMessage, Command
 from ..messages.base import Peer, Term
 from ..messages.response import ResponseMessage
@@ -130,10 +132,16 @@ class Leader(State):
                     )
                     logger.debug(f"Learner: Advanced {message.sender} by {num_entries}")
                 new_commit_index = statistics.median_low(self._matchIndex.values())
-                if (
-                    self._server._log[new_commit_index].term
-                    == self._server._currentTerm
-                    and new_commit_index > self._server._commitIndex
+                commit_term = live.ok_value(
+                    live.log_get(self._server._log, new_commit_index)
+                )
+                # Verified decision (raft.core.can_commit): commit only entries
+                # from the leader's current term, moving strictly forward.
+                if commit_term is not None and can_commit(
+                    new_commit_index,
+                    int(self._server._currentTerm),
+                    commit_term,
+                    self._server._commitIndex,
                 ):
                     self._server._commitIndex = new_commit_index
                     async with self._server._condition:

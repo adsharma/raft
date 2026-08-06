@@ -1,6 +1,7 @@
 import asyncio
 import logging
 
+from ..core import promote_to_leader
 from ..messages.base import Term
 from ..messages.request_vote import RequestVoteMessage, RequestVoteResponseMessage
 from ..servers.server import Server
@@ -40,8 +41,9 @@ class Candidate(Voter):
             logger.debug(f"{num_votes} {total_nodes}\n{message}")
             # Guard for the case we're network partitioned from other nodes.
             # We shouldn't promote ourselves to a leader if the network comes
-            # back
-            if num_votes > 1 and num_votes > (total_nodes / 2):
+            # back.  Verified decision (raft.core.promote_to_leader): a strict
+            # majority AND more than one vote.
+            if promote_to_leader(num_votes, total_nodes):
                 self.timer.cancel()
                 leader = Leader()
                 leader.set_server(self._server)
