@@ -21,8 +21,15 @@ class DBBoard(Board):
         self.i = 0  # increments on writing to log.db
         self.lsn = 0  # increments on writing to msg.db
 
+    def close(self):
+        self._db.close()
+        self._messages.close()
+        self._kv.close()
+
     def clear(self):
-        for i in glob.glob(f"{self.prefix}*.db"):
+        # Match the db files *and* sqlite sidecars (-wal/-shm/-journal);
+        # stale sidecars from crashed runs break subsequent opens.
+        for i in glob.glob(f"{self.prefix}*db*"):
             os.unlink(i)
 
     async def post_message(self, message: BaseMessage):
