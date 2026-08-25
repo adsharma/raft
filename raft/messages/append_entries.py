@@ -1,7 +1,7 @@
 import hashlib
 from dataclasses import dataclass, field
 from enum import IntEnum
-from typing import List, Union
+from typing import Union
 
 from serde import InternalTagging, serde
 from serde.msgpack import to_msgpack
@@ -36,7 +36,7 @@ class AppendEntriesMessage(BaseMessage):
     leader_id: Union[int, str, None] = None
     prev_log_index: int = 0
     prev_log_term: Term = Term(0)
-    entries: List[LogEntry] = field(default_factory=list)
+    entries: list[LogEntry] = field(default_factory=list)
     leader_commit: int = 0
 
     def __init_subclass__(cls, **kwargs):
