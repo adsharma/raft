@@ -13,7 +13,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "pip>=25.2",
+    "pip>=26.1.2",
     "bump2version>=0.5.11",
     "wheel>=0.38.1",
     "watchdog>=3.0.0",
