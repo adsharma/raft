@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import shutil
+import tempfile
 import unittest
 
 from raft.boards.db_board import DBBoard
@@ -17,13 +19,16 @@ M = 6  # learners
 class TestRaft(unittest.IsolatedAsyncioTestCase):
     @classmethod
     async def asyncSetUpClass(cls):
+        # IsolatedAsyncioTestCase has no built-in class-level async setup
+        # hook, so asyncSetUp() calls this manually before every test.
+        cls.tmpdir = tempfile.mkdtemp(prefix="raft-test-")
         cls.servers = []
         for i in range(N):
             s = ZeroMQServer(
                 f"S{i}",
                 Follower(),
                 port=6666 + i,
-                messageBoard=DBBoard(prefix=f"/tmp/DB{i}"),
+                messageBoard=DBBoard(prefix=f"{cls.tmpdir}/DB{i}"),
             )
             cls.servers.append(s)
         for i in range(N, N + M):
@@ -31,7 +36,7 @@ class TestRaft(unittest.IsolatedAsyncioTestCase):
                 f"S{i}",
                 Learner(),
                 port=6666 + i,
-                messageBoard=DBBoard(prefix=f"/tmp/DB{i}"),
+                messageBoard=DBBoard(prefix=f"{cls.tmpdir}/DB{i}"),
             )
             cls.servers.append(s)
         for i in range(N):
@@ -54,9 +59,20 @@ class TestRaft(unittest.IsolatedAsyncioTestCase):
 
     @classmethod
     async def asyncTearDownClass(cls):
-        pass
+        for s in getattr(cls, "servers", []):
+            s._messageBoard.close()
+        shutil.rmtree(getattr(cls, "tmpdir", ""), ignore_errors=True)
 
     async def asyncSetUp(self):
+        # Release file descriptors held by the previous test's servers
+        # (shelve boards + dbm stable storage) or we exhaust the fd limit.
+        for s in getattr(self, "servers", []):
+            s._messageBoard.close()
+            if s._stable_storage is not None:
+                s._stable_storage.close()
+                s._stable_storage = None
+        if getattr(self, "tmpdir", None):
+            shutil.rmtree(self.tmpdir, ignore_errors=True)
         await self.asyncSetUpClass()
         for i in range(N + M):
             self.servers[i]._state.__init__()
